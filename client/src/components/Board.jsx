@@ -108,13 +108,15 @@ export default function Board({ tasks, setTasks, onOpen, dark }) {
 
   const onDrop = async (status) => {
     if (!draggingId) return
+    const id = draggingId
+    setDraggingId(null)
+    // optimistic update — socket event will confirm
+    setTasks(ts => ts.map(t => t.id === id ? { ...t, status } : t))
     try {
-      const updated = await api.patch(`/tasks/${draggingId}/status`, { status })
-      setTasks(ts => ts.map(t => t.id === draggingId ? updated : t))
+      await api.patch(`/tasks/${id}/status`, { status })
     } catch (e) {
       console.error(e)
     }
-    setDraggingId(null)
   }
 
   const onAdd = async (status, title) => {

@@ -2,7 +2,7 @@ import Icon from './Icon'
 import { Avatar } from './Atoms'
 import { useAuth } from '../context/AuthContext'
 
-export default function Sidebar({ view, setView, onShortcuts }) {
+export default function Sidebar({ view, setView, onShortcuts, onSearch }) {
   const { user, logout } = useAuth()
 
   const items = [
@@ -28,7 +28,7 @@ export default function Sidebar({ view, setView, onShortcuts }) {
         <div className="sb-name">Strat<em>a</em></div>
       </div>
 
-      <div className="sb-search">
+      <div className="sb-search" onClick={onSearch} style={{ cursor: 'pointer' }}>
         <div className="sb-search-in">
           <Icon name="search" />
           <span>Search</span>

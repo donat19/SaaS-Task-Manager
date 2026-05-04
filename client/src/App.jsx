@@ -12,6 +12,7 @@ import TaskModal from './components/Modal'
 import AuditView from './components/Audit'
 import NotificationsPop from './components/Notifications'
 import Shortcuts from './components/Shortcuts'
+import SearchModal from './components/SearchModal'
 
 export default function App() {
   const { user } = useAuth()
@@ -22,6 +23,7 @@ export default function App() {
   const [notifs, setNotifs] = useState([])
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
   const [dark, setDark] = useState(() => localStorage.getItem('dark') === '1')
+  const [searchOpen, setSearchOpen] = useState(false)
   const [toast, setToast] = useState(null)
 
   useEffect(() => {
@@ -38,29 +40,30 @@ export default function App() {
   useEffect(() => {
     const socket = getSocket()
     if (!socket) return
-    const onCreated = (t) => setTasks(ts => [t, ...ts])
+    const onCreated = (t) => setTasks(ts => ts.some(x => x.id === t.id) ? ts : [t, ...ts])
     const onUpdated = (t) => setTasks(ts => ts.map(x => x.id === t.id ? t : x))
     const onDeleted = ({ id }) => setTasks(ts => ts.filter(x => x.id !== id))
     const onMoved = ({ id, status }) => setTasks(ts => ts.map(x => x.id === id ? { ...x, status } : x))
-    const onComment = () => {}
+    const onNotif = (n) => setNotifs(ns => [n, ...ns])
     socket.on('task:created', onCreated)
     socket.on('task:updated', onUpdated)
     socket.on('task:deleted', onDeleted)
     socket.on('task:moved', onMoved)
-    socket.on('comment:added', onComment)
+    socket.on('notification:new', onNotif)
     return () => {
       socket.off('task:created', onCreated)
       socket.off('task:updated', onUpdated)
       socket.off('task:deleted', onDeleted)
       socket.off('task:moved', onMoved)
-      socket.off('comment:added', onComment)
+      socket.off('notification:new', onNotif)
     }
   }, [])
 
   useEffect(() => {
     const onKey = (e) => {
       const meta = e.metaKey || e.ctrlKey
-      if (meta && e.key === '/') { e.preventDefault(); setShortcutsOpen(s => !s) }
+      if (meta && e.key === 'k') { e.preventDefault(); setSearchOpen(s => !s) }
+      else if (meta && e.key === '/') { e.preventDefault(); setShortcutsOpen(s => !s) }
       else if (meta && e.key === '.') { e.preventDefault(); setDark(d => !d) }
       else if (e.key === 'g') {
         const next = (e2) => {
@@ -101,7 +104,7 @@ export default function App() {
 
   return (
     <div className="app">
-      <Sidebar view={view} setView={setView} onShortcuts={() => setShortcutsOpen(true)} />
+      <Sidebar view={view} setView={setView} onShortcuts={() => setShortcutsOpen(true)} onSearch={() => setSearchOpen(true)} />
 
       <div className="main">
         <div className="top">
@@ -196,6 +199,7 @@ export default function App() {
         <TaskModal taskId={openTaskId} onClose={() => setOpenTaskId(null)} onUpdate={handleTaskUpdate} dark={dark} />
       )}
       {shortcutsOpen && <Shortcuts onClose={() => setShortcutsOpen(false)} />}
+      {searchOpen && <SearchModal onClose={() => setSearchOpen(false)} onOpenTask={(id) => { setOpenTaskId(id); if (view === 'audit') setView('board') }} />}
 
       {toast && (
         <div className="toast-wrap">

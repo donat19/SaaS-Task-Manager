@@ -15,6 +15,7 @@ export function AuthProvider({ children }) {
       .then((u) => { setUser(u); connectSocket(token) })
       .catch(() => localStorage.removeItem('token'))
       .finally(() => setLoading(false))
+    return () => disconnectSocket()
   }, [])
 
   const login = async (email, password) => {

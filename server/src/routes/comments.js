@@ -3,6 +3,7 @@ import { z } from 'zod'
 import prisma from '../lib/prisma.js'
 import { requireAuth } from '../middleware/auth.js'
 import { io } from '../index.js'
+import { sendNotification } from '../lib/notify.js'
 
 const router = Router()
 router.use(requireAuth)
@@ -26,6 +27,21 @@ router.post('/task/:taskId', async (req, res, next) => {
       include: { user: { select: { id: true, name: true, avatar: true } } },
     })
     io.emit('comment:added', comment)
+
+    // notify all assignees except the commenter
+    const task = await prisma.task.findUnique({
+      where: { id: Number(req.params.taskId) },
+      include: { assignees: true },
+    })
+    if (task) {
+      const targets = task.assignees
+        .map(a => a.userId)
+        .filter(uid => uid !== req.user.id)
+      await Promise.all(targets.map(uid =>
+        sendNotification({ userId: uid, text: `**${comment.user.name}** commented on *${task.title}*`, taskId: task.id })
+      ))
+    }
+
     res.status(201).json(comment)
   } catch (e) { next(e) }
 })

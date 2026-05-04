@@ -16,7 +16,10 @@
       "PowerShell($token = \\(Invoke-RestMethod -Uri \"http://localhost:3000/api/auth/login\" -Method POST -ContentType \"application/json\" -Body '{\"email\":\"alice@strata.app\",\"password\":\"admin123\"}'\\).token; $tasks = Invoke-RestMethod -Uri \"http://localhost:3000/api/tasks\" -Headers @{Authorization=\"Bearer $token\"}; Write-Host \"Tasks count: $\\($tasks.Count\\)\"; $tasks[0] | ConvertTo-Json -Depth 3)",
       "Bash(npx vite *)",
       "PowerShell(Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser)",
-      "PowerShell(Get-ExecutionPolicy -Scope CurrentUser)"
+      "PowerShell(Get-ExecutionPolicy -Scope CurrentUser)",
+      "PowerShell($p = Get-NetTCPConnection -LocalPort 3000 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -First 1; if \\($p\\) { Stop-Process -Id $p -Force; Write-Host \"Killed PID $p\" } else { Write-Host \"Nothing on 3000\" })",
+      "PowerShell(Get-Process node -ErrorAction SilentlyContinue)",
+      "PowerShell(Stop-Process -Force)"
     ]
   }
 }

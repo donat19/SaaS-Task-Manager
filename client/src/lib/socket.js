@@ -8,7 +8,7 @@ export function getSocket() {
 
 export function connectSocket(token) {
   if (socket) socket.disconnect()
-  socket = io('/', { auth: { token }, transports: ['websocket'] })
+  socket = io('http://localhost:3000', { auth: { token }, transports: ['websocket'] })
   return socket
 }
 
