@@ -34,4 +34,14 @@ router.patch('/:id/role', requireAdmin, async (req, res, next) => {
   } catch (e) { next(e) }
 })
 
+router.delete('/:id', requireAdmin, async (req, res, next) => {
+  try {
+    const id = Number(req.params.id)
+    if (id === req.user.id) return res.status(400).json({ error: 'Cannot delete yourself' })
+    await prisma.user.delete({ where: { id } })
+    await writeAudit({ action: 'delete', entity: 'user', entityId: id, actorId: req.user.id, meta: {} })
+    res.status(204).end()
+  } catch (e) { next(e) }
+})
+
 export default router

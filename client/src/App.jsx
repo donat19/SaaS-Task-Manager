@@ -13,6 +13,8 @@ import NotificationsPop from './components/Notifications'
 import Shortcuts from './components/Shortcuts'
 import SearchModal from './components/SearchModal'
 import NewTaskModal from './components/NewTaskModal'
+import FilterBar from './components/FilterBar'
+import Members from './components/Members'
 
 export default function App() {
   const { user } = useAuth()
@@ -27,6 +29,14 @@ export default function App() {
   const [searchOpen, setSearchOpen] = useState(false)
   const [dark, setDark] = useState(() => localStorage.getItem('dark') === '1')
   const [toast, setToast] = useState(null)
+  const [filters, setFilters] = useState(() => {
+    const p = new URLSearchParams(window.location.search)
+    const out = {}
+    if (p.get('priority')) out.priority = p.get('priority').split(',')
+    if (p.get('assignee')) out.assignee = p.get('assignee').split(',').map(Number)
+    if (p.get('tag')) out.tag = p.get('tag').split(',').map(Number)
+    return out
+  })
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', dark)
@@ -74,6 +84,24 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
+  useEffect(() => {
+    const p = new URLSearchParams()
+    if (filters.priority?.length) p.set('priority', filters.priority.join(','))
+    if (filters.assignee?.length) p.set('assignee', filters.assignee.join(','))
+    if (filters.tag?.length) p.set('tag', filters.tag.join(','))
+    const qs = p.toString()
+    window.history.replaceState(null, '', qs ? `?${qs}` : window.location.pathname)
+  }, [filters])
+
+  const filteredTasks = useMemo(() => {
+    return tasks.filter(t => {
+      if (filters.priority?.length && !filters.priority.includes(t.priority)) return false
+      if (filters.assignee?.length && !filters.assignee.some(uid => t.assignees?.some(a => a.userId === uid))) return false
+      if (filters.tag?.length && !filters.tag.some(tid => t.tags?.some(tt => tt.tagId === tid))) return false
+      return true
+    })
+  }, [tasks, filters])
+
   const handleTaskUpdate = useCallback((updated) => {
     setTasks(ts => ts.map(t => t.id === updated.id ? updated : t))
   }, [])
@@ -103,13 +131,13 @@ export default function App() {
 
   const unreadCount = notifs.filter(n => !n.read).length
 
-  // dynamic stats
   const now = new Date()
   const monthYear = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
-  const doneTasks = tasks.filter(t => t.status === 'done').length
-  const progress = tasks.length ? Math.round((doneTasks / tasks.length) * 100) : 0
+  const doneTasks = filteredTasks.filter(t => t.status === 'done').length
+  const progress = filteredTasks.length ? Math.round((doneTasks / filteredTasks.length) * 100) : 0
+  const activeFilterCount = Object.values(filters).filter(v => v?.length).length
 
-  const viewLabel = view === 'audit' ? 'Audit log' : view === 'table' ? 'All tasks' : 'Board'
+  const viewLabel = view === 'audit' ? 'Audit log' : view === 'members' ? 'Members' : view === 'table' ? 'All tasks' : 'Board'
 
   return (
     <div className="app">
@@ -131,7 +159,7 @@ export default function App() {
             <strong>{viewLabel}</strong>
           </div>
 
-          {view !== 'audit' && (
+          {view !== 'audit' && view !== 'members' && (
             <div className="seg">
               <button className={view === 'board' ? 'on' : ''} onClick={() => setView('board')}>
                 <Icon name="grid" /> Board
@@ -169,7 +197,7 @@ export default function App() {
         </div>
 
         {/* Board header — only for board/table views */}
-        {view !== 'audit' && (
+        {view !== 'audit' && view !== 'members' && (
           <div className="board-head">
             <div className="board-title-wrap">
               <div className="board-title">
@@ -180,16 +208,17 @@ export default function App() {
                   <Icon name="cal" style={{ width: 12, height: 12 }} /> {monthYear}
                 </span>
                 <span className="meta">
-                  <span className="dot" /> {tasks.length} tasks
+                  <span className="dot" /> {filteredTasks.length}{activeFilterCount > 0 ? ` of ${tasks.length}` : ''} tasks
                 </span>
-                {tasks.length > 0 && (
+                {filteredTasks.length > 0 && (
                   <span className="meta">
                     <Icon name="activity" style={{ width: 12, height: 12 }} /> {progress}% done
                   </span>
                 )}
               </div>
             </div>
-            <div className="board-tools">
+            <div className="board-tools" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+              <FilterBar filters={filters} onChange={setFilters} />
               <button className="btn btn-ghost" onClick={() => setNewTaskOpen(true)}>
                 <Icon name="plus" /> New task
               </button>
@@ -197,9 +226,10 @@ export default function App() {
           </div>
         )}
 
-        {view === 'board' && <Board tasks={tasks} setTasks={setTasks} onOpen={setOpenTaskId} dark={dark} onNewTask={(status) => { setNewTaskStatus(status); setNewTaskOpen(true) }} />}
-        {view === 'table' && <TableView tasks={tasks} onOpen={setOpenTaskId} dark={dark} />}
+        {view === 'board' && <Board tasks={filteredTasks} setTasks={setTasks} onOpen={setOpenTaskId} dark={dark} onNewTask={(status) => { setNewTaskStatus(status); setNewTaskOpen(true) }} />}
+        {view === 'table' && <TableView tasks={filteredTasks} onOpen={setOpenTaskId} dark={dark} />}
         {view === 'audit' && <AuditView />}
+        {view === 'members' && <Members />}
       </div>
 
       {/* Mobile bottom tabs */}

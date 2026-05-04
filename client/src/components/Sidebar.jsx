@@ -1,17 +1,46 @@
+import { useState, useEffect, useRef } from 'react'
 import Icon from './Icon'
 import { Avatar } from './Atoms'
 import { useAuth } from '../context/AuthContext'
 
 export default function Sidebar({ view, setView, onShortcuts, onSearch, taskCount, unreadCount }) {
   const { user, logout } = useAuth()
+  const [profileOpen, setProfileOpen] = useState(false)
+  const footRef = useRef(null)
+
+  useEffect(() => {
+    if (!profileOpen) return
+    const close = (e) => { if (!footRef.current?.contains(e.target)) setProfileOpen(false) }
+    window.addEventListener('mousedown', close)
+    return () => window.removeEventListener('mousedown', close)
+  }, [profileOpen])
 
   const boards = [
     { id: 'board', label: 'Product team', color: 'oklch(0.6 0.14 280)', active: view === 'board' || view === 'table' },
   ]
 
   const admin = user?.role === 'admin' ? [
-    { id: 'audit', label: 'Audit log', icon: 'log' },
+    { id: 'members', label: 'Members',   icon: 'user' },
+    { id: 'audit',   label: 'Audit log', icon: 'log' },
   ] : []
+
+  const menuItem = (icon, label, onClick, danger) => (
+    <button
+      onClick={onClick}
+      style={{
+        all: 'unset', display: 'flex', alignItems: 'center', gap: 9,
+        width: '100%', padding: '8px 12px', fontSize: 13, cursor: 'pointer',
+        color: danger ? '#ef4444' : 'var(--ink-2)', borderRadius: 7,
+        fontFamily: 'inherit', boxSizing: 'border-box',
+        transition: 'background 0.1s',
+      }}
+      onMouseEnter={e => e.currentTarget.style.background = danger ? '#fee2e2' : 'var(--bg-soft)'}
+      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+    >
+      <Icon name={icon} style={{ width: 14, height: 14, flexShrink: 0 }} />
+      {label}
+    </button>
+  )
 
   return (
     <aside className="sb">
@@ -61,19 +90,57 @@ export default function Sidebar({ view, setView, onShortcuts, onSearch, taskCoun
           <span>Shortcuts</span>
           <span className="count" style={{ fontFamily: 'var(--mono)' }}>⌘/</span>
         </div>
-        <div className="sb-item" onClick={logout} style={{ color: 'var(--ink-3)' }}>
-          <Icon name="logout" />
-          <span>Sign out</span>
-        </div>
       </div>
 
-      <div className="sb-foot">
-        <Avatar user={user} size={28} />
-        <div className="sb-me">
-          <div className="sb-me-name">{user?.name}</div>
-          <div className="sb-me-role">{user?.role}@strata</div>
+      {/* Footer with profile popup */}
+      <div ref={footRef} style={{ position: 'relative', marginTop: 'auto', flexShrink: 0 }}>
+        {profileOpen && (
+          <div style={{
+            position: 'absolute', bottom: 'calc(100% + 8px)', left: 8, right: 8,
+            background: 'var(--bg-elev)', border: '1px solid var(--line)',
+            borderRadius: 10, boxShadow: '0 -4px 24px #0002',
+            padding: 6, zIndex: 50,
+            animation: 'slideUp 0.15s cubic-bezier(0.2,0.8,0.2,1)',
+          }}>
+            {/* User info header */}
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 10,
+              padding: '8px 10px 10px', borderBottom: '1px solid var(--line-soft)', marginBottom: 4,
+            }}>
+              <Avatar user={user} size={32} />
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.name}</div>
+                <div style={{ fontSize: 11, color: 'var(--ink-4)', fontFamily: 'var(--mono)' }}>{user?.email}</div>
+              </div>
+            </div>
+
+            {menuItem('user', 'Profile', () => { setProfileOpen(false) })}
+            {menuItem('settings', 'Settings', () => { setProfileOpen(false) })}
+            {menuItem('cmd', 'Shortcuts', () => { setProfileOpen(false); onShortcuts() })}
+            <div style={{ height: 1, background: 'var(--line-soft)', margin: '4px 4px' }} />
+            {menuItem('logout', 'Sign out', () => { setProfileOpen(false); logout() }, true)}
+          </div>
+        )}
+
+        <div
+          className="sb-foot"
+          onClick={() => setProfileOpen(o => !o)}
+          style={{ cursor: 'pointer' }}
+        >
+          <Avatar user={user} size={28} />
+          <div className="sb-me">
+            <div className="sb-me-name">{user?.name}</div>
+            <div className="sb-me-role">{user?.role}@strata</div>
+          </div>
+          <Icon
+            name="chev"
+            style={{
+              color: 'var(--ink-4)', width: 13, height: 13,
+              transform: profileOpen ? 'rotate(270deg)' : 'rotate(90deg)',
+              transition: 'transform 0.2s',
+            }}
+          />
         </div>
-        <Icon name="chev" style={{ color: 'var(--ink-4)', transform: 'rotate(90deg)', width: 13, height: 13 }} />
       </div>
     </aside>
   )
