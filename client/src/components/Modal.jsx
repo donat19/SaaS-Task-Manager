@@ -12,6 +12,9 @@ export default function TaskModal({ taskId, onClose, onUpdate, dark }) {
   const [draft, setDraft] = useState('')
   const [dropOver, setDropOver] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [moreOpen, setMoreOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   useEffect(() => {
     if (!taskId) return
@@ -28,10 +31,19 @@ export default function TaskModal({ taskId, onClose, onUpdate, dark }) {
   }, [taskId])
 
   useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') onClose() }
+    const onKey = (e) => {
+      if (e.key === 'Escape') { if (moreOpen) setMoreOpen(false); else onClose() }
+    }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
+  }, [onClose, moreOpen])
+
+  useEffect(() => {
+    if (!moreOpen) return
+    const close = () => setMoreOpen(false)
+    window.addEventListener('click', close)
+    return () => window.removeEventListener('click', close)
+  }, [moreOpen])
 
   const submitComment = async () => {
     if (!draft.trim()) return
@@ -43,6 +55,22 @@ export default function TaskModal({ taskId, onClose, onUpdate, dark }) {
   const deleteComment = async (id) => {
     await api.delete(`/comments/${id}`)
     setComments(cs => cs.filter(c => c.id !== id))
+  }
+
+  const handleDelete = async () => {
+    setDeleting(true)
+    setConfirmDelete(false)
+    try {
+      await api.delete(`/tasks/${taskId}`)
+      onClose()
+    } catch {
+      setDeleting(false)
+    }
+  }
+
+  const copyLink = () => {
+    navigator.clipboard.writeText(`${window.location.origin}/?task=${taskId}`)
+    setMoreOpen(false)
   }
 
   const handleStatusChange = async (status) => {
@@ -80,7 +108,38 @@ export default function TaskModal({ taskId, onClose, onUpdate, dark }) {
                 <StatusPill status={task.status} dark={dark} />
                 <PriorityPill priority={task.priority} />
                 <div className="m-head-spacer" />
-                <button className="icbtn" title="More"><Icon name="more" /></button>
+                <div style={{ position: 'relative' }}>
+                  <button className="icbtn" title="More" onClick={() => setMoreOpen(o => !o)}><Icon name="more" /></button>
+                  {moreOpen && (
+                    <div
+                      style={{
+                        position: 'absolute', top: '100%', right: 0, zIndex: 100,
+                        background: 'var(--bg-elev)', border: '1px solid var(--line)',
+                        borderRadius: 8, boxShadow: '0 4px 16px #0002', padding: 4,
+                        minWidth: 160, marginTop: 4,
+                      }}
+                      onClick={e => e.stopPropagation()}
+                    >
+                      <button
+                        onClick={copyLink}
+                        style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '7px 10px', fontSize: 13, background: 'none', border: 'none', borderRadius: 6, cursor: 'pointer', color: 'var(--ink)', textAlign: 'left' }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover, #f5f5f5)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                      >
+                        <Icon name="link" size={13} /> Copy link
+                      </button>
+                      <button
+                        onClick={() => { setMoreOpen(false); setConfirmDelete(true) }}
+                        disabled={deleting}
+                        style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '7px 10px', fontSize: 13, background: 'none', border: 'none', borderRadius: 6, cursor: 'pointer', color: 'var(--red, #e55)', textAlign: 'left' }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover, #f5f5f5)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                      >
+                        <Icon name="trash" size={13} /> {deleting ? 'Deleting…' : 'Delete task'}
+                      </button>
+                    </div>
+                  )}
+                </div>
                 <button className="icbtn" title="Close" onClick={onClose}><Icon name="x" /></button>
               </div>
 
@@ -203,6 +262,51 @@ export default function TaskModal({ taskId, onClose, onUpdate, dark }) {
           <div style={{ flex: 1, display: 'grid', placeItems: 'center', color: 'var(--ink-3)' }}>Task not found</div>
         )}
       </div>
+
+      {confirmDelete && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, zIndex: 200,
+            display: 'grid', placeItems: 'center',
+            background: 'rgba(0,0,0,0.45)',
+          }}
+          onClick={() => setConfirmDelete(false)}
+        >
+          <div
+            style={{
+              background: 'var(--bg-elev)', borderRadius: 12,
+              padding: '24px 28px', width: 340,
+              boxShadow: '0 8px 32px #0003',
+              display: 'flex', flexDirection: 'column', gap: 16,
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{
+                width: 36, height: 36, borderRadius: '50%',
+                background: '#fee2e2', display: 'grid', placeItems: 'center', flexShrink: 0,
+              }}>
+                <Icon name="trash" size={16} style={{ color: '#ef4444' }} />
+              </div>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 15, color: 'var(--ink)' }}>Delete task?</div>
+                <div style={{ fontSize: 12, color: 'var(--ink-3)', marginTop: 2 }}>This action cannot be undone.</div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button className="btn btn-ghost" onClick={() => setConfirmDelete(false)}>Cancel</button>
+              <button
+                className="btn"
+                style={{ background: '#ef4444', color: '#fff', borderColor: '#ef4444' }}
+                onClick={handleDelete}
+                disabled={deleting}
+              >
+                {deleting ? 'Deleting…' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

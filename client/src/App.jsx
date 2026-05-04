@@ -1,10 +1,9 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useAuth } from './context/AuthContext'
 import { getSocket } from './lib/socket'
 import api from './lib/api'
 
 import Icon from './components/Icon'
-import { Avatar } from './components/Atoms'
 import Sidebar from './components/Sidebar'
 import Board from './components/Board'
 import TableView from './components/Table'
@@ -13,17 +12,20 @@ import AuditView from './components/Audit'
 import NotificationsPop from './components/Notifications'
 import Shortcuts from './components/Shortcuts'
 import SearchModal from './components/SearchModal'
+import NewTaskModal from './components/NewTaskModal'
 
 export default function App() {
   const { user } = useAuth()
   const [tasks, setTasks] = useState([])
   const [view, setView] = useState('board')
   const [openTaskId, setOpenTaskId] = useState(null)
+  const [newTaskOpen, setNewTaskOpen] = useState(false)
+  const [newTaskStatus, setNewTaskStatus] = useState(null)
   const [notifsOpen, setNotifsOpen] = useState(false)
   const [notifs, setNotifs] = useState([])
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
-  const [dark, setDark] = useState(() => localStorage.getItem('dark') === '1')
   const [searchOpen, setSearchOpen] = useState(false)
+  const [dark, setDark] = useState(() => localStorage.getItem('dark') === '1')
   const [toast, setToast] = useState(null)
 
   useEffect(() => {
@@ -36,7 +38,6 @@ export default function App() {
     api.get('/notifications').then(setNotifs).catch(console.error)
   }, [])
 
-  // WebSocket
   useEffect(() => {
     const socket = getSocket()
     if (!socket) return
@@ -65,12 +66,8 @@ export default function App() {
       if (meta && e.key === 'k') { e.preventDefault(); setSearchOpen(s => !s) }
       else if (meta && e.key === '/') { e.preventDefault(); setShortcutsOpen(s => !s) }
       else if (meta && e.key === '.') { e.preventDefault(); setDark(d => !d) }
-      else if (e.key === 'g') {
-        const next = (e2) => {
-          if (e2.key === 'b') { setView('board'); document.removeEventListener('keydown', next) }
-          if (e2.key === 't') { setView('table'); document.removeEventListener('keydown', next) }
-        }
-        document.addEventListener('keydown', next, { once: true })
+      else if (e.key === 'n' && !e.target.closest('input,textarea,[contenteditable]')) {
+        setNewTaskStatus(null); setNewTaskOpen(true)
       }
     }
     window.addEventListener('keydown', onKey)
@@ -79,6 +76,12 @@ export default function App() {
 
   const handleTaskUpdate = useCallback((updated) => {
     setTasks(ts => ts.map(t => t.id === updated.id ? updated : t))
+  }, [])
+
+  const handleTaskCreated = useCallback((task) => {
+    setTasks(ts => ts.some(x => x.id === task.id) ? ts : [task, ...ts])
+    setNewTaskOpen(false)
+    showToast('Task created')
   }, [])
 
   const handleNotifClick = async (taskId, notifId) => {
@@ -93,31 +96,43 @@ export default function App() {
     setNotifs(ns => ns.map(n => ({ ...n, read: true })))
   }
 
-  const unreadCount = notifs.filter(n => !n.read).length
-
   const showToast = (msg, icon = 'check') => {
     setToast({ msg, icon })
     setTimeout(() => setToast(null), 2000)
   }
 
-  const placeholderView = ['inbox', 'myweek', 'starred', 'members', 'settings'].includes(view)
+  const unreadCount = notifs.filter(n => !n.read).length
+
+  // dynamic stats
+  const now = new Date()
+  const monthYear = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+  const doneTasks = tasks.filter(t => t.status === 'done').length
+  const progress = tasks.length ? Math.round((doneTasks / tasks.length) * 100) : 0
+
+  const viewLabel = view === 'audit' ? 'Audit log' : view === 'table' ? 'All tasks' : 'Board'
 
   return (
     <div className="app">
-      <Sidebar view={view} setView={setView} onShortcuts={() => setShortcutsOpen(true)} onSearch={() => setSearchOpen(true)} />
+      <Sidebar
+        view={view}
+        setView={setView}
+        onShortcuts={() => setShortcutsOpen(true)}
+        onSearch={() => setSearchOpen(true)}
+        taskCount={tasks.length}
+        unreadCount={unreadCount}
+      />
 
       <div className="main">
+        {/* Topbar */}
         <div className="top">
           <div className="crumbs">
-            <span>Workspace</span>
+            <span>{user?.name}</span>
             <span className="sep">/</span>
-            <span>Product team</span>
-            <span className="sep">/</span>
-            <strong>{view === 'audit' ? 'Audit log' : view === 'table' ? 'All tasks' : 'Sprint 18'}</strong>
+            <strong>{viewLabel}</strong>
           </div>
 
-          {view !== 'audit' && !placeholderView && (
-            <div className="seg" data-tour-views>
+          {view !== 'audit' && (
+            <div className="seg">
               <button className={view === 'board' ? 'on' : ''} onClick={() => setView('board')}>
                 <Icon name="grid" /> Board
               </button>
@@ -128,8 +143,6 @@ export default function App() {
           )}
 
           <div className="top-spacer" />
-
-          <button className="icbtn" title="Filter"><Icon name="filter" /></button>
 
           <div style={{ position: 'relative' }}>
             <button data-notif-btn className="icbtn" title="Notifications" onClick={() => setNotifsOpen(o => !o)}>
@@ -150,56 +163,71 @@ export default function App() {
             <Icon name={dark ? 'sun' : 'moon'} />
           </button>
 
-          <button className="btn btn-primary" data-tour-newtask onClick={() => showToast('Choose a column and click + to add a task', 'plus')}>
+          <button className="btn btn-primary" onClick={() => setNewTaskOpen(true)}>
             <Icon name="plus" /> New task
           </button>
         </div>
 
-        {view !== 'audit' && !placeholderView && (
+        {/* Board header — only for board/table views */}
+        {view !== 'audit' && (
           <div className="board-head">
             <div className="board-title-wrap">
-              <div className="board-title">Sprint 18 <em>·</em> Product</div>
+              <div className="board-title">
+                {user?.name?.split(' ')[0]}'s workspace <em>·</em> {tasks.length > 0 ? 'Active' : 'Empty'}
+              </div>
               <div className="board-sub">
-                <span className="meta"><Icon name="cal" style={{ width: 12, height: 12 }} /> May 2026</span>
-                <span className="meta"><span className="dot" /> {tasks.length} tasks</span>
+                <span className="meta">
+                  <Icon name="cal" style={{ width: 12, height: 12 }} /> {monthYear}
+                </span>
+                <span className="meta">
+                  <span className="dot" /> {tasks.length} tasks
+                </span>
+                {tasks.length > 0 && (
+                  <span className="meta">
+                    <Icon name="activity" style={{ width: 12, height: 12 }} /> {progress}% done
+                  </span>
+                )}
               </div>
             </div>
             <div className="board-tools">
-              <button className="btn btn-ghost"><Icon name="sort" /> Sort</button>
-              <button className="btn btn-ghost"><Icon name="settings" /></button>
+              <button className="btn btn-ghost" onClick={() => setNewTaskOpen(true)}>
+                <Icon name="plus" /> New task
+              </button>
             </div>
           </div>
         )}
 
-        {view === 'board' && <Board tasks={tasks} setTasks={setTasks} onOpen={setOpenTaskId} dark={dark} />}
+        {view === 'board' && <Board tasks={tasks} setTasks={setTasks} onOpen={setOpenTaskId} dark={dark} onNewTask={(status) => { setNewTaskStatus(status); setNewTaskOpen(true) }} />}
         {view === 'table' && <TableView tasks={tasks} onOpen={setOpenTaskId} dark={dark} />}
         {view === 'audit' && <AuditView />}
-
-        {placeholderView && (
-          <div style={{ flex: 1, display: 'grid', placeItems: 'center', color: 'var(--ink-3)', padding: 40 }}>
-            <div style={{ textAlign: 'center', maxWidth: 360 }}>
-              <div style={{ fontSize: 18, fontWeight: 600, color: 'var(--ink)', letterSpacing: '-0.012em', marginBottom: 8 }}>
-                {view.charAt(0).toUpperCase() + view.slice(1)}
-              </div>
-              <div style={{ fontSize: 13 }}>Coming soon.</div>
-              <button className="btn btn-ghost" style={{ marginTop: 14 }} onClick={() => setView('board')}>← Back to board</button>
-            </div>
-          </div>
-        )}
       </div>
 
+      {/* Mobile bottom tabs */}
       <div className="mob-tabs">
         <button className={view === 'board' ? 'on' : ''} onClick={() => setView('board')}><Icon name="grid" /><span>Board</span></button>
         <button className={view === 'table' ? 'on' : ''} onClick={() => setView('table')}><Icon name="table" /><span>Table</span></button>
-        <button className={notifsOpen ? 'on' : ''} onClick={() => setNotifsOpen(o => !o)} data-notif-btn><Icon name="bell" /><span>Inbox</span></button>
-        <button className={view === 'audit' ? 'on' : ''} onClick={() => setView('audit')}><Icon name="log" /><span>Audit</span></button>
+        <button className={notifsOpen ? 'on' : ''} onClick={() => setNotifsOpen(o => !o)} data-notif-btn>
+          <Icon name="bell" /><span>Inbox</span>
+          {unreadCount > 0 && <span className="badge" style={{ position: 'absolute', top: 6, right: 8 }} />}
+        </button>
+        {user?.role === 'admin' && (
+          <button className={view === 'audit' ? 'on' : ''} onClick={() => setView('audit')}><Icon name="log" /><span>Audit</span></button>
+        )}
       </div>
 
       {openTaskId && (
         <TaskModal taskId={openTaskId} onClose={() => setOpenTaskId(null)} onUpdate={handleTaskUpdate} dark={dark} />
       )}
+      {newTaskOpen && (
+        <NewTaskModal onClose={() => { setNewTaskOpen(false); setNewTaskStatus(null) }} onCreated={handleTaskCreated} dark={dark} initialStatus={newTaskStatus} />
+      )}
       {shortcutsOpen && <Shortcuts onClose={() => setShortcutsOpen(false)} />}
-      {searchOpen && <SearchModal onClose={() => setSearchOpen(false)} onOpenTask={(id) => { setOpenTaskId(id); if (view === 'audit') setView('board') }} />}
+      {searchOpen && (
+        <SearchModal
+          onClose={() => setSearchOpen(false)}
+          onOpenTask={(id) => { setOpenTaskId(id); if (view === 'audit') setView('board') }}
+        />
+      )}
 
       {toast && (
         <div className="toast-wrap">

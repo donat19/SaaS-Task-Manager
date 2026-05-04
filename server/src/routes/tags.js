@@ -12,7 +12,7 @@ router.get('/', async (req, res, next) => {
   } catch (e) { next(e) }
 })
 
-router.post('/', requireAdmin, async (req, res, next) => {
+router.post('/', async (req, res, next) => {
   try {
     const { name, color } = z.object({ name: z.string().min(1), color: z.string().min(1) }).parse(req.body)
     res.status(201).json(await prisma.tag.create({ data: { name, color } }))

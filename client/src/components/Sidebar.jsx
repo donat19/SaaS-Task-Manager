@@ -2,23 +2,15 @@ import Icon from './Icon'
 import { Avatar } from './Atoms'
 import { useAuth } from '../context/AuthContext'
 
-export default function Sidebar({ view, setView, onShortcuts, onSearch }) {
+export default function Sidebar({ view, setView, onShortcuts, onSearch, taskCount, unreadCount }) {
   const { user, logout } = useAuth()
-
-  const items = [
-    { id: 'inbox',  label: 'Inbox',   icon: 'inbox' },
-    { id: 'myweek', label: 'My week', icon: 'cal' },
-    { id: 'starred',label: 'Starred', icon: 'star' },
-  ]
 
   const boards = [
     { id: 'board', label: 'Product team', color: 'oklch(0.6 0.14 280)', active: view === 'board' || view === 'table' },
   ]
 
   const admin = user?.role === 'admin' ? [
-    { id: 'audit',   label: 'Audit log', icon: 'log' },
-    { id: 'members', label: 'Members',   icon: 'user' },
-    { id: 'settings',label: 'Workspace', icon: 'settings' },
+    { id: 'audit', label: 'Audit log', icon: 'log' },
   ] : []
 
   return (
@@ -34,15 +26,6 @@ export default function Sidebar({ view, setView, onShortcuts, onSearch }) {
           <span>Search</span>
           <kbd>⌘K</kbd>
         </div>
-      </div>
-
-      <div className="sb-list">
-        {items.map(it => (
-          <div key={it.id} className={`sb-item ${view === it.id ? 'active' : ''}`} onClick={() => setView(it.id)}>
-            <Icon name={it.icon} />
-            <span>{it.label}</span>
-          </div>
-        ))}
       </div>
 
       <div className="sb-sect">
