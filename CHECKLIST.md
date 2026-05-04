@@ -2,7 +2,7 @@
 
 ## Стек
 - **Frontend**: React + Vite
-- **Backend**: Node.js + Express + Fastify
+- **Backend**: Node.js + Express
 - **База данных**: SQLite + Prisma ORM
 - **Auth**: JWT + bcrypt
 - **Realtime**: Socket.io
@@ -11,98 +11,96 @@
 
 ---
 
-## Фаза 1 — Инфраструктура проекта
-- [ ] Инициализировать monorepo структуру (`/client`, `/server`)
-- [ ] Настроить `package.json` в корне с общими скриптами
-- [ ] Настроить Vite для клиента
-- [ ] Настроить Express-сервер с базовой структурой
-- [ ] Настроить ESLint + Prettier
-- [ ] Настроить `.env` файлы (`.env.example` в репозиторий, `.env` в `.gitignore`)
-- [ ] Создать `README.md` с инструкцией запуска
+## Фаза 1 — Инфраструктура проекта ✅
+- [x] Инициализировать monorepo структуру (`/client`, `/server`)
+- [x] Настроить `package.json` в корне с общими скриптами
+- [x] Настроить Vite для клиента
+- [x] Настроить Express-сервер с базовой структурой
+- [x] Настроить ESLint
+- [x] Настроить `.env` файлы (`.env.example` в репозиторий, `.env` в `.gitignore`)
+- [x] Создать `README.md` с инструкцией запуска
 
 ---
 
-## Фаза 2 — База данных
-- [ ] Установить Prisma + SQLite
-- [ ] Создать схему базы данных:
-  - [ ] `User` (id, name, email, password, role, avatar, createdAt)
-  - [ ] `Task` (id, title, description, status, priority, dueDate, createdAt, updatedAt)
-  - [ ] `Tag` (id, name, color)
-  - [ ] `Comment` (id, text, taskId, userId, createdAt)
-  - [ ] `Attachment` (id, filename, path, size, taskId, userId, createdAt)
-  - [ ] `Notification` (id, text, read, userId, taskId, createdAt)
-  - [ ] `AuditLog` (id, action, entity, entityId, actorId, meta, createdAt)
-  - [ ] Связующие таблицы: `TaskAssignee`, `TaskTag`
-- [ ] Написать первую миграцию (`prisma migrate dev`)
-- [ ] Написать seed-скрипт с тестовыми данными (из текущего `data.jsx`)
+## Фаза 2 — База данных ✅
+- [x] Установить Prisma + SQLite
+- [x] Создать схему базы данных:
+  - [x] `User` (id, name, email, password, role, avatar, createdAt)
+  - [x] `Task` (id, title, description, status, priority, dueDate, createdAt, updatedAt)
+  - [x] `Tag` (id, name, color)
+  - [x] `Comment` (id, text, taskId, userId, createdAt)
+  - [x] `Attachment` (id, filename, path, size, taskId, userId, createdAt)
+  - [x] `Notification` (id, text, read, userId, taskId, createdAt)
+  - [x] `AuditLog` (id, action, entity, entityId, actorId, meta, createdAt)
+  - [x] Связующие таблицы: `TaskAssignee`, `TaskTag`
+- [x] Написать первую миграцию (`prisma migrate dev`)
+- [x] Написать seed-скрипт с тестовыми данными (из текущего `data.jsx`)
 
 ---
 
-## Фаза 3 — Backend API
-- [ ] Структура папок: `routes/`, `controllers/`, `middleware/`, `lib/`
-- [ ] Подключить Prisma Client глобально
+## Фаза 3 — Backend API ✅
+- [x] Структура папок: `routes/`, `middleware/`, `lib/`
+- [x] Подключить Prisma Client глобально
 
 ### Auth
-- [ ] `POST /api/auth/register` — регистрация
-- [ ] `POST /api/auth/login` — вход, возврат JWT
-- [ ] `POST /api/auth/logout` — выход
-- [ ] `GET /api/auth/me` — текущий пользователь
-- [ ] Middleware `requireAuth` — проверка JWT на защищённых роутах
-- [ ] Middleware `requireAdmin` — проверка роли
+- [x] `POST /api/auth/register` — регистрация
+- [x] `POST /api/auth/login` — вход, возврат JWT
+- [x] `GET /api/auth/me` — текущий пользователь
+- [x] Middleware `requireAuth` — проверка JWT на защищённых роутах
+- [x] Middleware `requireAdmin` — проверка роли
 
 ### Задачи
-- [ ] `GET /api/tasks` — список всех задач (с фильтрами: status, priority, assignee, tag)
-- [ ] `POST /api/tasks` — создать задачу
-- [ ] `GET /api/tasks/:id` — детали задачи
-- [ ] `PATCH /api/tasks/:id` — обновить задачу
-- [ ] `DELETE /api/tasks/:id` — удалить задачу
-- [ ] `PATCH /api/tasks/:id/status` — сменить статус (drag-and-drop)
+- [x] `GET /api/tasks` — список всех задач (с фильтрами: status, priority, assignee, tag)
+- [x] `POST /api/tasks` — создать задачу
+- [x] `GET /api/tasks/:id` — детали задачи
+- [x] `PATCH /api/tasks/:id` — обновить задачу
+- [x] `DELETE /api/tasks/:id` — удалить задачу
+- [x] `PATCH /api/tasks/:id/status` — сменить статус (drag-and-drop)
 
 ### Комментарии
-- [ ] `GET /api/tasks/:id/comments` — список комментариев
-- [ ] `POST /api/tasks/:id/comments` — добавить комментарий
-- [ ] `DELETE /api/comments/:id` — удалить комментарий
+- [x] `GET /api/comments/task/:id` — список комментариев
+- [x] `POST /api/comments/task/:id` — добавить комментарий
+- [x] `DELETE /api/comments/:id` — удалить комментарий
 
 ### Файлы
-- [ ] `POST /api/tasks/:id/attachments` — загрузить файл (Multer)
-- [ ] `GET /api/tasks/:id/attachments` — список файлов
-- [ ] `DELETE /api/attachments/:id` — удалить файл
-- [ ] `GET /api/uploads/:filename` — отдать файл
+- [x] `POST /api/attachments/task/:id` — загрузить файл (Multer)
+- [x] `GET /api/attachments/task/:id` — список файлов
+- [x] `DELETE /api/attachments/:id` — удалить файл
+- [x] `GET /uploads/:filename` — отдать файл (static)
 
 ### Пользователи
-- [ ] `GET /api/users` — список пользователей (для assignee)
-- [ ] `PATCH /api/users/:id` — обновить профиль
-- [ ] `PATCH /api/users/:id/role` — сменить роль (только admin)
+- [x] `GET /api/users` — список пользователей (для assignee)
+- [x] `PATCH /api/users/:id` — обновить профиль
+- [x] `PATCH /api/users/:id/role` — сменить роль (только admin)
 
 ### Теги
-- [ ] `GET /api/tags` — список тегов
-- [ ] `POST /api/tags` — создать тег
-- [ ] `DELETE /api/tags/:id` — удалить тег
+- [x] `GET /api/tags` — список тегов
+- [x] `POST /api/tags` — создать тег
+- [x] `DELETE /api/tags/:id` — удалить тег
 
 ### Уведомления
-- [ ] `GET /api/notifications` — уведомления текущего пользователя
-- [ ] `PATCH /api/notifications/:id/read` — отметить прочитанным
-- [ ] `PATCH /api/notifications/read-all` — отметить все прочитанными
+- [x] `GET /api/notifications` — уведомления текущего пользователя
+- [x] `PATCH /api/notifications/:id/read` — отметить прочитанным
+- [x] `PATCH /api/notifications/read-all` — отметить все прочитанными
 
 ### Поиск
-- [ ] `GET /api/search?q=...` — полнотекстовый поиск по задачам и комментариям (SQLite FTS5)
+- [x] `GET /api/search?q=...` — поиск по задачам и комментариям
 
 ### Аудит
-- [ ] `GET /api/audit` — журнал аудита (только admin, с пагинацией)
-- [ ] Автоматически писать в аудит при CRUD-операциях над задачами, пользователями, файлами
+- [x] `GET /api/audit` — журнал аудита (только admin, с пагинацией)
+- [x] Автоматически писать в аудит при CRUD-операциях над задачами, пользователями
 
 ---
 
-## Фаза 4 — Realtime (Socket.io)
-- [ ] Подключить Socket.io к серверу
-- [ ] Аутентификация WebSocket через JWT
-- [ ] События:
-  - [ ] `task:created` — новая задача
-  - [ ] `task:updated` — задача изменена
-  - [ ] `task:deleted` — задача удалена
-  - [ ] `task:moved` — задача перемещена в другую колонку
-  - [ ] `comment:added` — новый комментарий
-  - [ ] `notification:new` — новое уведомление
+## Фаза 4 — Realtime (Socket.io) ✅ (сервер)
+- [x] Подключить Socket.io к серверу
+- [x] Аутентификация WebSocket через JWT
+- [x] События:
+  - [x] `task:created` — новая задача
+  - [x] `task:updated` — задача изменена
+  - [x] `task:deleted` — задача удалена
+  - [x] `task:moved` — задача перемещена в другую колонку
+  - [x] `comment:added` — новый комментарий
 - [ ] На клиенте: подписаться на события и обновлять UI без перезагрузки
 
 ---
@@ -155,10 +153,10 @@
 
 | Фаза | Статус |
 |------|--------|
-| 1. Инфраструктура | ⬜ Не начата |
-| 2. База данных | ⬜ Не начата |
-| 3. Backend API | ⬜ Не начата |
-| 4. Realtime | ⬜ Не начата |
-| 5. Frontend | ⬜ Не начата |
+| 1. Инфраструктура | ✅ Готова |
+| 2. База данных | ✅ Готова |
+| 3. Backend API | ✅ Готов |
+| 4. Realtime (сервер) | ✅ Готов |
+| 5. Frontend | 🔄 В работе |
 | 6. Безопасность | ⬜ Не начата |
 | 7. Финал | ⬜ Не начата |

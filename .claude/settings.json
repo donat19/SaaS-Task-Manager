@@ -3,7 +3,17 @@
     "allow": [
       "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\izima\\\\Desktop\\\\SaaS Task Manager\" -Recurse -Force)",
       "Bash(Select-Object FullName)",
-      "PowerShell(Get-ChildItem -Path \"c:\\\\Users\\\\izima\\\\Desktop\\\\SaaS Task Manager\" -Recurse -Force | Select-Object FullName | ForEach-Object { $_.FullName } | head -150)"
+      "PowerShell(Get-ChildItem -Path \"c:\\\\Users\\\\izima\\\\Desktop\\\\SaaS Task Manager\" -Recurse -Force | Select-Object FullName | ForEach-Object { $_.FullName } | head -150)",
+      "Bash(npm install *)",
+      "Bash(npx prisma *)",
+      "Bash(node prisma/seed.js)",
+      "Bash(node src/index.js)",
+      "Bash(Start-Sleep -Seconds 3)",
+      "Bash(Invoke-RestMethod -Uri \"http://localhost:3000/api/auth/login\" -Method POST -ContentType \"application/json\" -Body '{\"email\":\"alice@strata.app\",\"password\":\"admin123\"}')",
+      "Bash(ConvertTo-Json)",
+      "PowerShell(Start-Process -NoNewWindow -FilePath \"node\" -ArgumentList \"src/index.js\" -WorkingDirectory \"c:\\\\Users\\\\izima\\\\Desktop\\\\SaaS Task Manager\\\\server\"; Start-Sleep -Seconds 3; try { Invoke-RestMethod -Uri \"http://localhost:3000/api/auth/login\" -Method POST -ContentType \"application/json\" -Body '{\"email\":\"alice@strata.app\",\"password\":\"admin123\"}' } catch { $_.Exception.Message })",
+      "PowerShell(Invoke-RestMethod -Uri \"http://localhost:3000/api/auth/login\" -Method POST -ContentType \"application/json\" -Body '{\"email\":\"alice@strata.app\",\"password\":\"admin123\"}')",
+      "PowerShell($token = \\(Invoke-RestMethod -Uri \"http://localhost:3000/api/auth/login\" -Method POST -ContentType \"application/json\" -Body '{\"email\":\"alice@strata.app\",\"password\":\"admin123\"}'\\).token; $tasks = Invoke-RestMethod -Uri \"http://localhost:3000/api/tasks\" -Headers @{Authorization=\"Bearer $token\"}; Write-Host \"Tasks count: $\\($tasks.Count\\)\"; $tasks[0] | ConvertTo-Json -Depth 3)"
     ]
   }
 }
