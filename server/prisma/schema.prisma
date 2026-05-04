@@ -1,0 +1,106 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int            @id @default(autoincrement())
+  name          String
+  email         String         @unique
+  password      String
+  role          String         @default("user")
+  avatar        String?
+  createdAt     DateTime       @default(now())
+  assignees     TaskAssignee[]
+  comments      Comment[]
+  attachments   Attachment[]
+  notifications Notification[]
+  auditLogs     AuditLog[]
+}
+
+model Task {
+  id          Int            @id @default(autoincrement())
+  title       String
+  description String?
+  status      String         @default("backlog")
+  priority    String         @default("medium")
+  dueDate     DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  assignees   TaskAssignee[]
+  tags        TaskTag[]
+  comments    Comment[]
+  attachments Attachment[]
+}
+
+model Tag {
+  id    Int       @id @default(autoincrement())
+  name  String    @unique
+  color String
+  tasks TaskTag[]
+}
+
+model TaskAssignee {
+  taskId Int
+  userId Int
+  task   Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, userId])
+}
+
+model TaskTag {
+  taskId Int
+  tagId  Int
+  task   Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  tag    Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, tagId])
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  text      String
+  taskId    Int
+  userId    Int
+  createdAt DateTime @default(now())
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Attachment {
+  id        Int      @id @default(autoincrement())
+  filename  String
+  path      String
+  size      Int
+  taskId    Int
+  userId    Int
+  createdAt DateTime @default(now())
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  text      String
+  read      Boolean  @default(false)
+  userId    Int
+  taskId    Int?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  action    String
+  entity    String
+  entityId  String
+  actorId   Int
+  meta      String   @default("{}")
+  createdAt DateTime @default(now())
+  actor     User     @relation(fields: [actorId], references: [id])
+}
