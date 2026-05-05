@@ -3,6 +3,13 @@ import Icon from './Icon'
 import { Tag, Avatars, COLUMNS } from './Atoms'
 import api from '../lib/api'
 
+export function getBoardColumns(boardId) {
+  try {
+    const saved = localStorage.getItem(`board-columns-${boardId}`)
+    return saved ? JSON.parse(saved) : COLUMNS
+  } catch { return COLUMNS }
+}
+
 function Card({ task, onOpen, onDragStart, onDragEnd, dragging, dark }) {
   const today = new Date()
   const dueDate = task.dueDate ? new Date(task.dueDate) : null
@@ -72,7 +79,7 @@ function Column({ col, tasks, onOpen, onDrop, onDragStart, onDragEnd, draggingId
   )
 }
 
-export default function Board({ tasks, setTasks, onOpen, dark, onNewTask }) {
+export default function Board({ tasks, setTasks, onOpen, dark, onNewTask, columns }) {
   const [draggingId, setDraggingId] = useState(null)
 
   const onDrop = async (status) => {
@@ -90,7 +97,7 @@ export default function Board({ tasks, setTasks, onOpen, dark, onNewTask }) {
   return (
     <div className="kanban">
       <div className="columns">
-        {COLUMNS.map(col => (
+        {(columns || COLUMNS).map(col => (
           <Column
             key={col.id}
             col={col}

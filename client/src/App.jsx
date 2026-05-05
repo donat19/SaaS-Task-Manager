@@ -5,7 +5,7 @@ import api from './lib/api'
 
 import Icon from './components/Icon'
 import Sidebar from './components/Sidebar'
-import Board from './components/Board'
+import Board, { getBoardColumns } from './components/Board'
 import TableView from './components/Table'
 import TaskModal from './components/Modal'
 import AuditView from './components/Audit'
@@ -33,6 +33,7 @@ export default function App() {
   const [searchOpen, setSearchOpen] = useState(false)
   const [dark, setDark] = useState(() => localStorage.getItem('dark') === '1')
   const [boardSettingsOpen, setBoardSettingsOpen] = useState(false)
+  const [boardColumnsKey, setBoardColumnsKey] = useState(0)
   const [toast, setToast] = useState(null)
   const [filters, setFilters] = useState(() => {
     const p = new URLSearchParams(window.location.search)
@@ -251,7 +252,7 @@ export default function App() {
           </div>
         )}
 
-        {isBoardView && <Board tasks={filteredTasks} setTasks={setTasks} onOpen={setOpenTaskId} dark={dark} onNewTask={(status) => { setNewTaskStatus(status); setNewTaskOpen(true) }} />}
+        {isBoardView && <Board key={`board-${view}-${boardColumnsKey}`} tasks={filteredTasks} setTasks={setTasks} onOpen={setOpenTaskId} dark={dark} onNewTask={(status) => { setNewTaskStatus(status); setNewTaskOpen(true) }} columns={getBoardColumns(view)} />}
         {isTableView && <TableView tasks={filteredTasks} onOpen={setOpenTaskId} dark={dark} />}
         {view === 'audit' && <AuditView />}
         {view === 'members' && <Members />}
@@ -283,7 +284,7 @@ export default function App() {
         <BoardSettings
           boardId={view}
           boardName={viewLabel}
-          onClose={() => setBoardSettingsOpen(false)}
+          onClose={() => { setBoardSettingsOpen(false); setBoardColumnsKey(k => k + 1) }}
         />
       )}
       {shortcutsOpen && <Shortcuts onClose={() => setShortcutsOpen(false)} />}

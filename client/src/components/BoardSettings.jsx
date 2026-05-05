@@ -80,12 +80,24 @@ function MembersTab({ boardId }) {
   )
 }
 
+const OKLCH_TO_HEX = {
+  'oklch(0.6 0.04 220)': '#5f7a9f',
+  'oklch(0.6 0.13 60)':  '#b07d20',
+  'oklch(0.6 0.14 280)': '#7c3aed',
+  'oklch(0.6 0.14 220)': '#2563eb',
+  'oklch(0.6 0.13 150)': '#16a34a',
+}
+
+function toHex(color) {
+  return OKLCH_TO_HEX[color] || (color.startsWith('#') ? color : '#6366f1')
+}
+
 function ColumnsTab({ boardId }) {
   const [cols, setCols] = useState(() => {
     try {
       const saved = localStorage.getItem(`board-columns-${boardId}`)
-      return saved ? JSON.parse(saved) : COLUMNS.map(c => ({ ...c }))
-    } catch { return COLUMNS.map(c => ({ ...c })) }
+      return saved ? JSON.parse(saved) : COLUMNS.map(c => ({ ...c, color: toHex(c.color) }))
+    } catch { return COLUMNS.map(c => ({ ...c, color: toHex(c.color) })) }
   })
   const [newName, setNewName] = useState('')
 
@@ -138,7 +150,7 @@ function ColumnsTab({ boardId }) {
           />
           <input
             type="color"
-            value={c.color.startsWith('oklch') ? '#6366f1' : c.color}
+            value={c.color}
             onChange={e => changeColor(c.id, e.target.value)}
             title="Column color"
             style={{ width: 22, height: 22, border: 'none', background: 'none', cursor: 'pointer', padding: 0, borderRadius: 4 }}
