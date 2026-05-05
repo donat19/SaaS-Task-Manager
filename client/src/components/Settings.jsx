@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import Icon from './Icon'
 import { useAuth } from '../context/AuthContext'
 
 function Section({ title, description, children }) {
@@ -158,29 +159,12 @@ export default function Settings({ dark, setDark }) {
       </Section>
 
       {user?.role === 'admin' && (
-        <Section title="Workspace" description="Workspace-level settings (admin only).">
-          <Row label="Workspace name" description="Displayed in the sidebar and breadcrumbs">
-            <input
-              defaultValue="Product team"
-              style={{
-                all: 'unset', padding: '6px 10px', fontSize: 12.5, color: 'var(--ink)',
-                background: 'var(--bg-soft)', border: '1px solid var(--line)',
-                borderRadius: 8, fontFamily: 'inherit', width: 160,
-              }}
-            />
-          </Row>
-          <Row label="Default task status" description="Status assigned to new tasks" last>
-            <select
-              defaultValue="todo"
-              style={{
-                all: 'unset', cursor: 'pointer', padding: '6px 10px', fontSize: 12.5, color: 'var(--ink)',
-                background: 'var(--bg-soft)', border: '1px solid var(--line)', borderRadius: 8, fontFamily: 'inherit',
-              }}
-            >
-              <option value="backlog">Backlog</option>
-              <option value="todo">To do</option>
-              <option value="in_progress">In progress</option>
-            </select>
+        <Section title="Workspace" description="Admin tools and quick links.">
+          <Row label="Members" description="Manage workspace members and roles" last>
+            <button className="btn btn-ghost" onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'members' }))}
+              style={{ fontSize: 12 }}>
+              <Icon name="user" /> Go to Members
+            </button>
           </Row>
         </Section>
       )}

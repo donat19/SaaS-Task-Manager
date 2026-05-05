@@ -88,6 +88,12 @@ export default function App() {
   }, [])
 
   useEffect(() => {
+    const onNav = (e) => setView(e.detail)
+    window.addEventListener('navigate', onNav)
+    return () => window.removeEventListener('navigate', onNav)
+  }, [])
+
+  useEffect(() => {
     const p = new URLSearchParams()
     if (filters.priority?.length) p.set('priority', filters.priority.join(','))
     if (filters.assignee?.length) p.set('assignee', filters.assignee.join(','))

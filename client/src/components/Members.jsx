@@ -57,12 +57,29 @@ export default function Members() {
   const [inviteError, setInviteError] = useState('')
   const [inviting, setSaving] = useState(false)
   const [toast, setToast] = useState(null)
+  const [inviteLink, setInviteLink] = useState(null)
+  const [generatingLink, setGeneratingLink] = useState(false)
 
   useEffect(() => {
     api.get('/users').then(u => { setUsers(u); setLoading(false) }).catch(() => setLoading(false))
   }, [])
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 2500) }
+
+  const generateInviteLink = async () => {
+    setGeneratingLink(true)
+    try {
+      const { token } = await api.post('/auth/invite')
+      const link = `${window.location.origin}/register?invite=${token}`
+      setInviteLink(link)
+    } catch {}
+    setGeneratingLink(false)
+  }
+
+  const copyInviteLink = () => {
+    navigator.clipboard.writeText(inviteLink)
+    showToast('Invite link copied!')
+  }
 
   const changeRole = async (id, role) => {
     try {
@@ -112,10 +129,41 @@ export default function Members() {
             {users.length} {users.length === 1 ? 'person' : 'people'} in this workspace
           </p>
         </div>
-        <button className="btn btn-primary" onClick={() => setInviteOpen(true)}>
-          <Icon name="plus" /> Add member
-        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="btn btn-ghost" onClick={generateInviteLink} disabled={generatingLink}>
+            <Icon name="link" /> {generatingLink ? 'Generating…' : 'Invite link'}
+          </button>
+          <button className="btn btn-primary" onClick={() => setInviteOpen(true)}>
+            <Icon name="plus" /> Add member
+          </button>
+        </div>
       </div>
+
+      {/* Invite link banner */}
+      {inviteLink && (
+        <div style={{
+          background: 'var(--accent-soft)', border: '1px solid var(--accent)',
+          borderRadius: 10, padding: '12px 16px', marginBottom: 20,
+          display: 'flex', alignItems: 'center', gap: 12,
+        }}>
+          <Icon name="link" style={{ width: 15, height: 15, color: 'var(--accent)', flexShrink: 0 }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--accent-ink)', marginBottom: 3 }}>
+              Invite link · expires in 48 hours
+            </div>
+            <div style={{
+              fontSize: 11.5, fontFamily: 'var(--mono)', color: 'var(--ink-3)',
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            }}>{inviteLink}</div>
+          </div>
+          <button className="btn btn-ghost" onClick={copyInviteLink} style={{ flexShrink: 0, fontSize: 12 }}>
+            <Icon name="paperclip" /> Copy
+          </button>
+          <button className="icbtn" onClick={() => setInviteLink(null)}>
+            <Icon name="x" size={13} />
+          </button>
+        </div>
+      )}
 
       {/* Table */}
       {loading ? (

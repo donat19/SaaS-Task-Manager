@@ -19,7 +19,8 @@
       "PowerShell(Get-ExecutionPolicy -Scope CurrentUser)",
       "PowerShell($p = Get-NetTCPConnection -LocalPort 3000 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -First 1; if \\($p\\) { Stop-Process -Id $p -Force; Write-Host \"Killed PID $p\" } else { Write-Host \"Nothing on 3000\" })",
       "PowerShell(Get-Process node -ErrorAction SilentlyContinue)",
-      "PowerShell(Stop-Process -Force)"
+      "PowerShell(Stop-Process -Force)",
+      "Bash(node -e ' *)"
     ]
   }
 }

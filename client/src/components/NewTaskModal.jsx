@@ -39,6 +39,7 @@ export default function NewTaskModal({ onClose, onCreated, dark, initialStatus }
   const [newTagName, setNewTagName] = useState('')
   const [newTagColor, setNewTagColor] = useState('#6366f1')
   const [creatingTag, setCreatingTag] = useState(false)
+  const [assigneeSearch, setAssigneeSearch] = useState('')
 
   useEffect(() => {
     Promise.all([api.get('/users'), api.get('/tags')])
@@ -165,28 +166,97 @@ export default function NewTaskModal({ onClose, onCreated, dark, initialStatus }
           {users.length > 0 && (
             <div>
               <div className="m-side-h" style={{ marginBottom: 8 }}>Assignees</div>
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                {users.map(u => {
-                  const on = selectedAssignees.includes(u.id)
-                  return (
-                    <button
-                      key={u.id}
-                      onClick={() => toggleAssignee(u.id)}
-                      style={{
-                        all: 'unset', display: 'inline-flex', alignItems: 'center', gap: 7,
-                        padding: '5px 10px 5px 6px', borderRadius: 999, border: '1px solid',
-                        fontSize: 12.5, cursor: 'pointer', fontFamily: 'inherit',
-                        borderColor: on ? 'var(--accent)' : 'var(--line)',
-                        background: on ? 'var(--accent-soft)' : 'var(--bg-soft)',
-                        color: on ? 'var(--accent-ink)' : 'var(--ink-2)',
-                        transition: 'all 0.12s',
-                      }}
-                    >
-                      <Avatar user={u} size={20} />
-                      {u.name}
-                    </button>
-                  )
-                })}
+
+              {/* Selected chips */}
+              {selectedAssignees.length > 0 && (
+                <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: 8 }}>
+                  {selectedAssignees.map(id => {
+                    const u = users.find(u => u.id === id)
+                    if (!u) return null
+                    return (
+                      <span key={id} style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 5,
+                        padding: '3px 6px 3px 5px', borderRadius: 999,
+                        background: 'var(--accent-soft)', border: '1px solid var(--accent)',
+                        fontSize: 12, color: 'var(--accent-ink)',
+                      }}>
+                        <Avatar user={u} size={16} />
+                        {u.name}
+                        <button onClick={() => toggleAssignee(id)} style={{
+                          all: 'unset', cursor: 'pointer', display: 'grid', placeItems: 'center',
+                          width: 14, height: 14, borderRadius: '50%', background: 'oklch(0 0 0/0.1)',
+                        }}>
+                          <Icon name="x" style={{ width: 8, height: 8 }} />
+                        </button>
+                      </span>
+                    )
+                  })}
+                </div>
+              )}
+
+              {/* Search input */}
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                padding: '6px 10px', background: 'var(--bg-soft)',
+                border: '1px solid var(--line)', borderRadius: 8, marginBottom: 6,
+              }}>
+                <Icon name="search" style={{ width: 13, height: 13, color: 'var(--ink-4)', flexShrink: 0 }} />
+                <input
+                  style={{ all: 'unset', flex: 1, fontSize: 12.5, color: 'var(--ink)', fontFamily: 'inherit' }}
+                  placeholder="Search people…"
+                  value={assigneeSearch}
+                  onChange={e => setAssigneeSearch(e.target.value)}
+                />
+                {assigneeSearch && (
+                  <button onClick={() => setAssigneeSearch('')} style={{ all: 'unset', cursor: 'pointer', color: 'var(--ink-4)' }}>
+                    <Icon name="x" style={{ width: 11, height: 11 }} />
+                  </button>
+                )}
+              </div>
+
+              {/* User list */}
+              <div style={{
+                background: 'var(--bg-soft)', borderRadius: 8,
+                border: '1px solid var(--line)', overflow: 'hidden',
+                maxHeight: 180, overflowY: 'auto',
+              }}>
+                {users
+                  .filter(u => u.name.toLowerCase().includes(assigneeSearch.toLowerCase()) ||
+                                u.email.toLowerCase().includes(assigneeSearch.toLowerCase()))
+                  .map((u, i, arr) => {
+                    const on = selectedAssignees.includes(u.id)
+                    return (
+                      <button
+                        key={u.id}
+                        onClick={() => toggleAssignee(u.id)}
+                        style={{
+                          all: 'unset', display: 'flex', alignItems: 'center', gap: 9,
+                          width: '100%', padding: '8px 12px', cursor: 'pointer',
+                          boxSizing: 'border-box', fontFamily: 'inherit',
+                          borderBottom: i < arr.length - 1 ? '1px solid var(--line-soft)' : 'none',
+                          background: on ? 'var(--accent-soft)' : 'transparent',
+                          transition: 'background 0.1s',
+                        }}
+                        onMouseEnter={e => { if (!on) e.currentTarget.style.background = 'var(--bg-elev)' }}
+                        onMouseLeave={e => { if (!on) e.currentTarget.style.background = 'transparent' }}
+                      >
+                        <Avatar user={u} size={24} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 13, fontWeight: 500, color: on ? 'var(--accent-ink)' : 'var(--ink)' }}>{u.name}</div>
+                          <div style={{ fontSize: 11, color: 'var(--ink-4)', fontFamily: 'var(--mono)' }}>{u.email}</div>
+                        </div>
+                        {on && <Icon name="check" style={{ width: 13, height: 13, color: 'var(--accent)', flexShrink: 0 }} />}
+                      </button>
+                    )
+                  })}
+                {users.filter(u =>
+                  u.name.toLowerCase().includes(assigneeSearch.toLowerCase()) ||
+                  u.email.toLowerCase().includes(assigneeSearch.toLowerCase())
+                ).length === 0 && (
+                  <div style={{ padding: '12px', fontSize: 12.5, color: 'var(--ink-4)', textAlign: 'center' }}>
+                    No people found
+                  </div>
+                )}
               </div>
             </div>
           )}
