@@ -19,12 +19,17 @@ export default function AuditView() {
       .finally(() => setLoading(false))
   }, [filter, page])
 
-  const evtColor = (action) => {
-    if (action === 'create') return 'oklch(0.6 0.13 60)'
-    if (action === 'delete') return 'oklch(0.6 0.16 25)'
-    if (action === 'update' || action === 'move') return 'oklch(0.6 0.14 280)'
-    if (action === 'role_change') return 'oklch(0.6 0.14 220)'
-    return 'var(--ink-3)'
+  const evtStyle = (action) => {
+    const map = {
+      create:             { color: 'oklch(0.35 0.12 150)', bg: 'oklch(0.94 0.05 150)', border: 'oklch(0.75 0.1 150)' },
+      delete:             { color: 'oklch(0.4 0.18 25)',   bg: 'oklch(0.95 0.05 25)',  border: 'oklch(0.75 0.14 25)' },
+      update:             { color: 'oklch(0.38 0.15 280)', bg: 'oklch(0.95 0.03 280)', border: 'oklch(0.75 0.12 280)' },
+      move:               { color: 'oklch(0.38 0.15 280)', bg: 'oklch(0.95 0.03 280)', border: 'oklch(0.75 0.12 280)' },
+      role_change:        { color: 'oklch(0.38 0.14 60)',  bg: 'oklch(0.96 0.05 60)',  border: 'oklch(0.78 0.12 60)' },
+      permissions_change: { color: 'oklch(0.38 0.14 200)', bg: 'oklch(0.95 0.04 200)', border: 'oklch(0.75 0.1 200)' },
+    }
+    const s = map[action] || { color: 'var(--ink-3)', bg: 'var(--bg-soft)', border: 'var(--line)' }
+    return { color: s.color, background: s.bg, borderColor: s.border }
   }
 
   return (
@@ -67,7 +72,7 @@ export default function AuditView() {
           <div className="audit-row" key={r.id}>
             <span className="audit-time">{new Date(r.createdAt).toLocaleString()}</span>
             <span className="audit-evt">
-              <span className="pill" style={{ color: evtColor(r.action), borderColor: 'currentColor' }}>{r.action}</span>
+              <span className="pill" style={evtStyle(r.action)}>{r.action}</span>
               <b>{r.entity} #{r.entityId}</b>
             </span>
             <span className="audit-actor">

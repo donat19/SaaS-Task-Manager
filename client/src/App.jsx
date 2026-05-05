@@ -4,6 +4,7 @@ import { getSocket } from './lib/socket'
 import api from './lib/api'
 
 import Icon from './components/Icon'
+import { Avatar } from './components/Atoms'
 import Sidebar from './components/Sidebar'
 import Board, { getBoardColumns } from './components/Board'
 import TableView from './components/Table'
@@ -197,6 +198,22 @@ export default function App() {
 
           <div className="top-spacer" />
 
+          {/* Presence avatars */}
+          {(isBoardView || isTableView) && tasks.length > 0 && (() => {
+            const seen = new Set()
+            const members = tasks.flatMap(t => t.assignees || []).filter(a => { if (seen.has(a.userId)) return false; seen.add(a.userId); return true }).slice(0, 4)
+            return members.length > 0 ? (
+              <div style={{ display: 'flex', alignItems: 'center', marginRight: 4 }}>
+                {members.map((a, i) => (
+                  <div key={a.userId} style={{ marginLeft: i === 0 ? 0 : -8, zIndex: members.length - i, position: 'relative', borderRadius: '50%', border: '2px solid var(--bg)', boxSizing: 'content-box' }}>
+                    <Avatar user={a.user} size={26} />
+                  </div>
+                ))}
+                {seen.size > 4 && <span style={{ marginLeft: 4, fontSize: 11, color: 'var(--ink-3)' }}>+{seen.size - 4}</span>}
+              </div>
+            ) : null
+          })()}
+
           <div style={{ position: 'relative' }}>
             <button data-notif-btn className="icbtn" title="Notifications" onClick={() => setNotifsOpen(o => !o)}>
               <Icon name="bell" />
@@ -242,6 +259,9 @@ export default function App() {
                     <Icon name="activity" style={{ width: 12, height: 12 }} /> {progress}% done
                   </span>
                 )}
+                <span className="meta" title="Real-time sync active">
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'oklch(0.62 0.15 150)', display: 'inline-block', boxShadow: '0 0 0 2px oklch(0.62 0.15 150 / 0.25)' }} /> Live
+                </span>
               </div>
             </div>
             <div className="board-tools" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
@@ -249,11 +269,6 @@ export default function App() {
               {canManageColumns && (
                 <button className="btn btn-ghost" onClick={() => setBoardSettingsOpen(true)} title="Board settings">
                   <Icon name="settings" /> Settings
-                </button>
-              )}
-              {canCreateTasks && (
-                <button className="btn btn-ghost" onClick={() => setNewTaskOpen(true)}>
-                  <Icon name="plus" /> New task
                 </button>
               )}
             </div>

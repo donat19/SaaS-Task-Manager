@@ -3,7 +3,7 @@ import Icon from './Icon'
 import { Avatar } from './Atoms'
 import { useAuth } from '../context/AuthContext'
 
-export default function Sidebar({ view, setView, onShortcuts, onSearch }) {
+export default function Sidebar({ view, setView, onShortcuts, onSearch, unreadCount = 0 }) {
   const { user, logout } = useAuth()
   const [profileOpen, setProfileOpen] = useState(false)
   const [newBoardOpen, setNewBoardOpen] = useState(false)
@@ -95,6 +95,21 @@ export default function Sidebar({ view, setView, onShortcuts, onSearch }) {
           <kbd>⌘K</kbd>
         </div>
       </div>
+
+      <div className="sb-list" style={{ marginTop: 4 }}>
+        {[
+          { id: 'inbox',   icon: 'bell',     label: 'Inbox',   count: unreadCount },
+          { id: 'my-week', icon: 'cal',      label: 'My week' },
+          { id: 'starred', icon: 'activity', label: 'Starred' },
+        ].map(it => (
+          <div key={it.id} className={`sb-item ${view === it.id ? 'active' : ''}`} onClick={() => setView(it.id)}>
+            <Icon name={it.icon} />
+            <span style={{ flex: 1 }}>{it.label}</span>
+            {it.count > 0 && <span className="count" style={{ background: 'var(--accent)', color: '#fff', borderRadius: 999, padding: '1px 6px', fontSize: 10, fontWeight: 600 }}>{it.count}</span>}
+          </div>
+        ))}
+      </div>
+      <div style={{ height: 1, background: 'var(--line-soft)', margin: '6px 12px' }} />
 
       <div className="sb-sect">
         <span>Boards</span>

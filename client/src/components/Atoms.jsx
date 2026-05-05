@@ -32,10 +32,15 @@ export function Avatar({ user, size = 24, style }) {
   )
 }
 
-export function Tag({ tag }) {
+export function Tag({ tag, dark }) {
   if (!tag) return null
+  const c = tag.color
+  const isDark = dark ?? document.documentElement.classList.contains('dark')
+  const bg = isDark ? `oklch(from ${c} 0.25 0.08 h / 0.7)` : `oklch(from ${c} 0.94 0.06 h)`
+  const fg = isDark ? `oklch(from ${c} 0.82 0.14 h)` : `oklch(from ${c} 0.38 0.18 h)`
+  const border = isDark ? `oklch(from ${c} 0.38 0.1 h)` : `oklch(from ${c} 0.78 0.1 h)`
   return (
-    <span className="tag" style={{ background: tag.color + '22', color: tag.color, border: `1px solid ${tag.color}44` }}>
+    <span className="tag" style={{ background: bg, color: fg, border: `1px solid ${border}` }}>
       {tag.name}
     </span>
   )
