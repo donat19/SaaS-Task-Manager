@@ -106,6 +106,9 @@ html.dark .sb-item:hover { background: oklch(1 0 0 / 0.04); }
 .sb-item.active .ic { color: var(--accent); }
 .sb-item .count { margin-left: auto; font-size: 11px; color: var(--ink-4); }
 .sb-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+.sb-board-del { all: unset; cursor: pointer; opacity: 0; width: 16px; height: 16px; display: grid; place-items: center; border-radius: 4px; color: var(--ink-4); flex-shrink: 0; transition: opacity 0.15s, color 0.15s; }
+.sb-board-item:hover .sb-board-del { opacity: 1; }
+.sb-board-del:hover { color: #ef4444 !important; }
 
 .sb-foot { margin-top: auto; padding: 12px; display: flex; align-items: center; gap: 10px; border-top: 1px solid var(--line-soft); flex-shrink: 0; }
 .av { border-radius: 50%; flex-shrink: 0; display: grid; place-items: center; font-size: 10.5px; font-weight: 600; color: white; letter-spacing: 0.02em; }

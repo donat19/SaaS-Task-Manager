@@ -11,6 +11,7 @@ export default function Sidebar({ view, setView, onShortcuts, onSearch }) {
   const [extraBoards, setExtraBoards] = useState(() => {
     try { return JSON.parse(localStorage.getItem('extraBoards') || '[]') } catch { return [] }
   })
+  const [confirmDeleteBoard, setConfirmDeleteBoard] = useState(null)
   const footRef = useRef(null)
 
   useEffect(() => {
@@ -38,9 +39,20 @@ export default function Sidebar({ view, setView, onShortcuts, onSearch }) {
     setView(id)
   }
 
+  const deleteBoard = (id) => {
+    const updated = extraBoards.filter(b => b.id !== id)
+    setExtraBoards(updated)
+    localStorage.setItem('extraBoards', JSON.stringify(updated))
+    localStorage.removeItem(`board-columns-${id}`)
+    localStorage.removeItem(`board-members-${id}`)
+    localStorage.removeItem(`board-tags-${id}`)
+    setConfirmDeleteBoard(null)
+    if (view === id) setView('board')
+  }
+
   const boards = [
-    { id: 'board', label: 'Product team', color: 'oklch(0.6 0.14 280)', active: view === 'board' || view === 'table' },
-    ...extraBoards.map(b => ({ ...b, active: view === b.id })),
+    { id: 'board', label: 'Product team', color: 'oklch(0.6 0.14 280)', active: view === 'board' || view === 'table', deletable: false },
+    ...extraBoards.map(b => ({ ...b, active: view === b.id, deletable: true })),
   ]
 
   const admin = user?.role === 'admin' ? [
@@ -92,9 +104,18 @@ export default function Sidebar({ view, setView, onShortcuts, onSearch }) {
       </div>
       <div className="sb-list">
         {boards.map(b => (
-          <div key={b.id} className={`sb-item ${b.active ? 'active' : ''}`} onClick={() => setView(b.id)}>
+          <div key={b.id} className={`sb-item ${b.active ? 'active' : ''} sb-board-item`} onClick={() => setView(b.id)}>
             <span className="sb-dot" style={{ background: b.color }} />
-            <span>{b.label}</span>
+            <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.label}</span>
+            {b.deletable && (
+              <button
+                className="sb-board-del"
+                title="Delete board"
+                onClick={e => { e.stopPropagation(); setConfirmDeleteBoard(b) }}
+              >
+                <Icon name="x" style={{ width: 10, height: 10 }} />
+              </button>
+            )}
           </div>
         ))}
       </div>
@@ -171,6 +192,40 @@ export default function Sidebar({ view, setView, onShortcuts, onSearch }) {
           />
         </div>
       </div>
+      {confirmDeleteBoard && (
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 300, display: 'grid', placeItems: 'center', background: 'rgba(0,0,0,0.45)' }}
+          onClick={() => setConfirmDeleteBoard(null)}
+        >
+          <div
+            style={{ background: 'var(--bg-elev)', borderRadius: 12, padding: '22px 24px', width: 340, boxShadow: '0 8px 32px #0004', display: 'flex', flexDirection: 'column', gap: 14 }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#fee2e2', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                <Icon name="trash" size={16} style={{ color: '#ef4444' }} />
+              </div>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 15, color: 'var(--ink)' }}>Delete board?</div>
+                <div style={{ fontSize: 12, color: 'var(--ink-3)', marginTop: 2 }}>
+                  «{confirmDeleteBoard.label}» will be permanently removed.
+                </div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button className="btn btn-ghost" onClick={() => setConfirmDeleteBoard(null)}>Cancel</button>
+              <button
+                className="btn"
+                style={{ background: '#ef4444', color: '#fff', borderColor: '#ef4444' }}
+                onClick={() => deleteBoard(confirmDeleteBoard.id)}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {newBoardOpen && (
         <div
           style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'grid', placeItems: 'center', background: 'rgba(0,0,0,0.4)' }}
