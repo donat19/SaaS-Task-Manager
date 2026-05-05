@@ -8,6 +8,9 @@ export default function Sidebar({ view, setView, onShortcuts, onSearch }) {
   const [profileOpen, setProfileOpen] = useState(false)
   const [newBoardOpen, setNewBoardOpen] = useState(false)
   const [newBoardName, setNewBoardName] = useState('')
+  const [extraBoards, setExtraBoards] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('extraBoards') || '[]') } catch { return [] }
+  })
   const footRef = useRef(null)
 
   useEffect(() => {
@@ -17,8 +20,27 @@ export default function Sidebar({ view, setView, onShortcuts, onSearch }) {
     return () => window.removeEventListener('mousedown', close)
   }, [profileOpen])
 
+  const BOARD_COLORS = [
+    'oklch(0.6 0.14 280)', 'oklch(0.6 0.16 150)', 'oklch(0.6 0.16 30)',
+    'oklch(0.6 0.16 200)', 'oklch(0.6 0.16 340)', 'oklch(0.6 0.14 60)',
+  ]
+
+  const createBoard = () => {
+    const name = newBoardName.trim()
+    if (!name) return
+    const id = `board-${Date.now()}`
+    const color = BOARD_COLORS[extraBoards.length % BOARD_COLORS.length]
+    const updated = [...extraBoards, { id, label: name, color }]
+    setExtraBoards(updated)
+    localStorage.setItem('extraBoards', JSON.stringify(updated))
+    setNewBoardOpen(false)
+    setNewBoardName('')
+    setView(id)
+  }
+
   const boards = [
     { id: 'board', label: 'Product team', color: 'oklch(0.6 0.14 280)', active: view === 'board' || view === 'table' },
+    ...extraBoards.map(b => ({ ...b, active: view === b.id })),
   ]
 
   const admin = user?.role === 'admin' ? [
@@ -165,9 +187,7 @@ export default function Sidebar({ view, setView, onShortcuts, onSearch }) {
               value={newBoardName}
               onChange={e => setNewBoardName(e.target.value)}
               onKeyDown={e => {
-                if (e.key === 'Enter' && newBoardName.trim()) {
-                  setNewBoardOpen(false)
-                }
+                if (e.key === 'Enter') createBoard()
                 if (e.key === 'Escape') setNewBoardOpen(false)
               }}
               style={{
@@ -181,7 +201,7 @@ export default function Sidebar({ view, setView, onShortcuts, onSearch }) {
               <button
                 className="btn btn-primary"
                 disabled={!newBoardName.trim()}
-                onClick={() => setNewBoardOpen(false)}
+                onClick={createBoard}
               >
                 Create board
               </button>
