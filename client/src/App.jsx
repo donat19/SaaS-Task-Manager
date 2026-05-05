@@ -15,6 +15,8 @@ import SearchModal from './components/SearchModal'
 import NewTaskModal from './components/NewTaskModal'
 import FilterBar from './components/FilterBar'
 import Members from './components/Members'
+import Profile from './components/Profile'
+import Settings from './components/Settings'
 
 export default function App() {
   const { user } = useAuth()
@@ -137,7 +139,7 @@ export default function App() {
   const progress = filteredTasks.length ? Math.round((doneTasks / filteredTasks.length) * 100) : 0
   const activeFilterCount = Object.values(filters).filter(v => v?.length).length
 
-  const viewLabel = view === 'audit' ? 'Audit log' : view === 'members' ? 'Members' : view === 'table' ? 'All tasks' : 'Board'
+  const viewLabel = { board: 'Board', table: 'All tasks', audit: 'Audit log', members: 'Members', profile: 'Profile', settings: 'Settings' }[view] || 'Board'
 
   return (
     <div className="app">
@@ -159,7 +161,7 @@ export default function App() {
             <strong>{viewLabel}</strong>
           </div>
 
-          {view !== 'audit' && view !== 'members' && (
+          {view !== 'audit' && view !== 'members' && view !== 'profile' && view !== 'settings' && (
             <div className="seg">
               <button className={view === 'board' ? 'on' : ''} onClick={() => setView('board')}>
                 <Icon name="grid" /> Board
@@ -197,7 +199,7 @@ export default function App() {
         </div>
 
         {/* Board header — only for board/table views */}
-        {view !== 'audit' && view !== 'members' && (
+        {view !== 'audit' && view !== 'members' && view !== 'profile' && view !== 'settings' && (
           <div className="board-head">
             <div className="board-title-wrap">
               <div className="board-title">
@@ -230,6 +232,8 @@ export default function App() {
         {view === 'table' && <TableView tasks={filteredTasks} onOpen={setOpenTaskId} dark={dark} />}
         {view === 'audit' && <AuditView />}
         {view === 'members' && <Members />}
+        {view === 'profile' && <Profile />}
+        {view === 'settings' && <Settings dark={dark} setDark={setDark} />}
       </div>
 
       {/* Mobile bottom tabs */}

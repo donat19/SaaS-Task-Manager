@@ -3,7 +3,7 @@ import Icon from './Icon'
 import { Avatar } from './Atoms'
 import { useAuth } from '../context/AuthContext'
 
-export default function Sidebar({ view, setView, onShortcuts, onSearch, taskCount, unreadCount }) {
+export default function Sidebar({ view, setView, onShortcuts, onSearch }) {
   const { user, logout } = useAuth()
   const [profileOpen, setProfileOpen] = useState(false)
   const footRef = useRef(null)
@@ -114,8 +114,8 @@ export default function Sidebar({ view, setView, onShortcuts, onSearch, taskCoun
               </div>
             </div>
 
-            {menuItem('user', 'Profile', () => { setProfileOpen(false) })}
-            {menuItem('settings', 'Settings', () => { setProfileOpen(false) })}
+            {menuItem('user', 'Profile', () => { setProfileOpen(false); setView('profile') })}
+            {menuItem('settings', 'Settings', () => { setProfileOpen(false); setView('settings') })}
             {menuItem('cmd', 'Shortcuts', () => { setProfileOpen(false); onShortcuts() })}
             <div style={{ height: 1, background: 'var(--line-soft)', margin: '4px 4px' }} />
             {menuItem('logout', 'Sign out', () => { setProfileOpen(false); logout() }, true)}

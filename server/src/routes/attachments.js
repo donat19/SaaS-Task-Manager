@@ -46,6 +46,19 @@ router.post('/task/:taskId', upload.single('file'), async (req, res, next) => {
   } catch (e) { next(e) }
 })
 
+router.post('/avatar', upload.single('file'), async (req, res, next) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No file' })
+    const avatarUrl = `/uploads/${req.file.filename}`
+    const user = await prisma.user.update({
+      where: { id: req.user.id },
+      data: { avatar: avatarUrl },
+      select: { id: true, name: true, email: true, role: true, avatar: true, createdAt: true },
+    })
+    res.json(user)
+  } catch (e) { next(e) }
+})
+
 router.delete('/:id', async (req, res, next) => {
   try {
     const att = await prisma.attachment.findUnique({ where: { id: Number(req.params.id) } })
