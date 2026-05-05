@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { z } from 'zod'
 import prisma from '../lib/prisma.js'
-import { requireAuth } from '../middleware/auth.js'
+import { requireAuth, requirePerm } from '../middleware/auth.js'
 import { writeAudit } from '../lib/audit.js'
 import { io } from '../index.js'
 
@@ -35,7 +35,7 @@ router.get('/', async (req, res, next) => {
   } catch (e) { next(e) }
 })
 
-router.post('/', async (req, res, next) => {
+router.post('/', requirePerm('create_tasks'), async (req, res, next) => {
   try {
     const { assigneeIds = [], tagIds = [], ...data } = taskSchema.parse(req.body)
     const task = await prisma.task.create({
@@ -61,7 +61,7 @@ router.get('/:id', async (req, res, next) => {
   } catch (e) { next(e) }
 })
 
-router.patch('/:id', async (req, res, next) => {
+router.patch('/:id', requirePerm('edit_tasks'), async (req, res, next) => {
   try {
     const { assigneeIds, tagIds, ...data } = taskSchema.partial().parse(req.body)
     const id = Number(req.params.id)
@@ -85,7 +85,7 @@ router.patch('/:id', async (req, res, next) => {
   } catch (e) { next(e) }
 })
 
-router.delete('/:id', async (req, res, next) => {
+router.delete('/:id', requirePerm('delete_tasks'), async (req, res, next) => {
   try {
     const id = Number(req.params.id)
     await prisma.task.delete({ where: { id } })

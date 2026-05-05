@@ -4,6 +4,68 @@ import { Avatar } from './Atoms'
 import api from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 
+const PERM_LABELS = {
+  create_tasks:   { label: 'Create tasks',    desc: 'Can add new tasks to any board' },
+  edit_tasks:     { label: 'Edit tasks',       desc: 'Can change title, status, assignees, etc.' },
+  delete_tasks:   { label: 'Delete tasks',     desc: 'Can permanently remove tasks' },
+  manage_tags:    { label: 'Manage tags',      desc: 'Can create and delete tags' },
+  manage_columns: { label: 'Manage columns',   desc: 'Can add, rename or reorder board columns' },
+}
+
+function PermissionsPanel({ user, onUpdate }) {
+  const perms = user.permissions || {}
+  const [saving, setSaving] = useState(null)
+
+  const toggle = async (key) => {
+    const next = { ...perms, [key]: !perms[key] }
+    setSaving(key)
+    try {
+      const updated = await api.patch(`/users/${user.id}/permissions`, next)
+      onUpdate(updated)
+    } catch {}
+    setSaving(null)
+  }
+
+  return (
+    <div style={{
+      margin: '0 20px 4px', borderRadius: 10,
+      background: 'var(--bg-soft)', border: '1px solid var(--line)',
+      padding: '4px 0', overflow: 'hidden',
+    }}>
+      <div style={{ padding: '8px 16px 6px', fontSize: 11, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--ink-4)' }}>
+        Permissions
+      </div>
+      {Object.entries(PERM_LABELS).map(([key, { label, desc }]) => (
+        <div key={key} style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '8px 16px', gap: 16,
+        }}>
+          <div>
+            <div style={{ fontSize: 13, color: 'var(--ink)', fontWeight: 500 }}>{label}</div>
+            <div style={{ fontSize: 11.5, color: 'var(--ink-4)', marginTop: 1 }}>{desc}</div>
+          </div>
+          <button
+            onClick={() => toggle(key)}
+            disabled={saving === key}
+            style={{
+              all: 'unset', cursor: 'pointer', width: 36, height: 20, borderRadius: 999, flexShrink: 0,
+              background: perms[key] ? 'var(--accent)' : 'var(--line)',
+              position: 'relative', transition: 'background 0.2s', display: 'block',
+              opacity: saving === key ? 0.6 : 1,
+            }}
+          >
+            <span style={{
+              position: 'absolute', top: 2, left: perms[key] ? 18 : 2,
+              width: 16, height: 16, borderRadius: '50%', background: '#fff',
+              boxShadow: '0 1px 3px #0003', transition: 'left 0.2s',
+            }} />
+          </button>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 function RoleBadge({ role }) {
   const isAdmin = role === 'admin'
   return (
@@ -52,6 +114,7 @@ export default function Members() {
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [confirmId, setConfirmId] = useState(null)
+  const [expandedPerms, setExpandedPerms] = useState(null)
   const [inviteOpen, setInviteOpen] = useState(false)
   const [inviteData, setInviteData] = useState({ name: '', email: '', password: '', role: 'user' })
   const [inviteError, setInviteError] = useState('')
@@ -172,7 +235,7 @@ export default function Members() {
         <div style={{ background: 'var(--bg-elev)', border: '1px solid var(--line)', borderRadius: 12, overflow: 'hidden' }}>
           {/* Table header */}
           <div style={{
-            display: 'grid', gridTemplateColumns: '1fr 200px 140px 120px 80px',
+            display: 'grid', gridTemplateColumns: '1fr 200px 140px 120px 100px',
             padding: '10px 20px', borderBottom: '1px solid var(--line)',
             fontSize: 10.5, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--ink-4)',
           }}>
@@ -184,12 +247,12 @@ export default function Members() {
           </div>
 
           {users.map((u, i) => (
+            <div key={u.id}>
             <div
-              key={u.id}
               style={{
-                display: 'grid', gridTemplateColumns: '1fr 200px 140px 120px 80px',
+                display: 'grid', gridTemplateColumns: '1fr 200px 140px 120px 100px',
                 padding: '14px 20px', alignItems: 'center',
-                borderBottom: i < users.length - 1 ? '1px solid var(--line-soft)' : 'none',
+                borderBottom: expandedPerms === u.id ? 'none' : (i < users.length - 1 ? '1px solid var(--line-soft)' : 'none'),
                 transition: 'background 0.1s',
               }}
               onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-soft)'}
@@ -240,7 +303,17 @@ export default function Members() {
               </div>
 
               {/* Actions */}
-              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 4 }}>
+                {u.id !== me?.id && u.role !== 'admin' && (
+                  <button
+                    className="icbtn"
+                    title="Permissions"
+                    onClick={() => setExpandedPerms(expandedPerms === u.id ? null : u.id)}
+                    style={{ color: expandedPerms === u.id ? 'var(--accent)' : 'var(--ink-4)' }}
+                  >
+                    <Icon name="settings" size={14} />
+                  </button>
+                )}
                 {u.id !== me?.id && (
                   <button
                     className="icbtn"
@@ -254,6 +327,14 @@ export default function Members() {
                   </button>
                 )}
               </div>
+            </div>
+            {expandedPerms === u.id && (
+              <PermissionsPanel
+                user={u}
+                onUpdate={updated => setUsers(us => us.map(x => x.id === updated.id ? { ...x, permissions: updated.permissions } : x))}
+              />
+            )}
+            {i < users.length - 1 && <div style={{ height: 1, background: 'var(--line-soft)', margin: '0 20px' }} />}
             </div>
           ))}
         </div>

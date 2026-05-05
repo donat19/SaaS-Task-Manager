@@ -18,8 +18,11 @@ const loginSchema = z.object({
   password: z.string().min(1),
 })
 
+const DEFAULT_PERMS = { create_tasks: true, edit_tasks: true, delete_tasks: false, manage_tags: false, manage_columns: false }
+function parsePerms(raw) { try { return { ...DEFAULT_PERMS, ...JSON.parse(raw || '{}') } } catch { return { ...DEFAULT_PERMS } } }
+
 function signToken(user) {
-  return jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' })
+  return jwt.sign({ id: user.id, role: user.role, permissions: parsePerms(user.permissions) }, process.env.JWT_SECRET, { expiresIn: '7d' })
 }
 
 router.post('/register', async (req, res, next) => {
@@ -95,7 +98,7 @@ router.get('/me', requireAuth, async (req, res, next) => {
 
 function sanitize(u) {
   const { password, ...rest } = u
-  return rest
+  return { ...rest, permissions: parsePerms(rest.permissions) }
 }
 
 export default router

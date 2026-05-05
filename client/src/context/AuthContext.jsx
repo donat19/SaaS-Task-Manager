@@ -50,3 +50,10 @@ export function AuthProvider({ children }) {
 export function useAuth() {
   return useContext(AuthContext)
 }
+
+export function usePerm(key) {
+  const { user } = useContext(AuthContext)
+  if (!user) return false
+  if (user.role === 'admin') return true
+  return !!user.permissions?.[key]
+}

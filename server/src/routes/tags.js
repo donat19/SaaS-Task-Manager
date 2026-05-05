@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { z } from 'zod'
 import prisma from '../lib/prisma.js'
-import { requireAuth, requireAdmin } from '../middleware/auth.js'
+import { requireAuth, requireAdmin, requirePerm } from '../middleware/auth.js'
 
 const router = Router()
 router.use(requireAuth)
@@ -12,7 +12,7 @@ router.get('/', async (req, res, next) => {
   } catch (e) { next(e) }
 })
 
-router.post('/', async (req, res, next) => {
+router.post('/', requirePerm('manage_tags'), async (req, res, next) => {
   try {
     const { name, color } = z.object({ name: z.string().min(1), color: z.string().min(1) }).parse(req.body)
     res.status(201).json(await prisma.tag.create({ data: { name, color } }))

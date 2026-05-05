@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { useAuth } from './context/AuthContext'
+import { useAuth, usePerm } from './context/AuthContext'
 import { getSocket } from './lib/socket'
 import api from './lib/api'
 
@@ -22,6 +22,8 @@ import BoardSettings from './components/BoardSettings'
 
 export default function App() {
   const { user } = useAuth()
+  const canCreateTasks = usePerm('create_tasks')
+  const canManageColumns = usePerm('manage_columns')
   const [tasks, setTasks] = useState([])
   const [view, setView] = useState('board')
   const [openTaskId, setOpenTaskId] = useState(null)
@@ -214,9 +216,11 @@ export default function App() {
             <Icon name={dark ? 'sun' : 'moon'} />
           </button>
 
-          <button className="btn btn-primary" onClick={() => setNewTaskOpen(true)}>
-            <Icon name="plus" /> New task
-          </button>
+          {canCreateTasks && (
+            <button className="btn btn-primary" onClick={() => setNewTaskOpen(true)}>
+              <Icon name="plus" /> New task
+            </button>
+          )}
         </div>
 
         {/* Board header — only for board/table views */}
@@ -242,12 +246,16 @@ export default function App() {
             </div>
             <div className="board-tools" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
               <FilterBar filters={filters} onChange={setFilters} />
-              <button className="btn btn-ghost" onClick={() => setBoardSettingsOpen(true)} title="Board settings">
-                <Icon name="settings" /> Settings
-              </button>
-              <button className="btn btn-ghost" onClick={() => setNewTaskOpen(true)}>
-                <Icon name="plus" /> New task
-              </button>
+              {canManageColumns && (
+                <button className="btn btn-ghost" onClick={() => setBoardSettingsOpen(true)} title="Board settings">
+                  <Icon name="settings" /> Settings
+                </button>
+              )}
+              {canCreateTasks && (
+                <button className="btn btn-ghost" onClick={() => setNewTaskOpen(true)}>
+                  <Icon name="plus" /> New task
+                </button>
+              )}
             </div>
           </div>
         )}

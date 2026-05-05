@@ -8,10 +8,22 @@ import { writeAudit } from '../lib/audit.js'
 const router = Router()
 router.use(requireAuth)
 
+const DEFAULT_PERMS = {
+  create_tasks: true,
+  edit_tasks: true,
+  delete_tasks: false,
+  manage_tags: false,
+  manage_columns: false,
+}
+
+function parsePerms(raw) {
+  try { return { ...DEFAULT_PERMS, ...JSON.parse(raw || '{}') } } catch { return { ...DEFAULT_PERMS } }
+}
+
 router.get('/', async (req, res, next) => {
   try {
-    const users = await prisma.user.findMany({ select: { id: true, name: true, email: true, role: true, avatar: true, createdAt: true } })
-    res.json(users)
+    const users = await prisma.user.findMany({ select: { id: true, name: true, email: true, role: true, avatar: true, createdAt: true, permissions: true } })
+    res.json(users.map(u => ({ ...u, permissions: parsePerms(u.permissions) })))
   } catch (e) { next(e) }
 })
 
@@ -59,6 +71,26 @@ router.patch('/:id/role', requireAdmin, async (req, res, next) => {
     const user = await prisma.user.update({ where: { id }, data: { role }, select: { id: true, name: true, role: true } })
     await writeAudit({ action: 'role_change', entity: 'user', entityId: id, actorId: req.user.id, meta: { role } })
     res.json(user)
+  } catch (e) { next(e) }
+})
+
+router.patch('/:id/permissions', requireAdmin, async (req, res, next) => {
+  try {
+    const id = Number(req.params.id)
+    const perms = z.object({
+      create_tasks:   z.boolean().optional(),
+      edit_tasks:     z.boolean().optional(),
+      delete_tasks:   z.boolean().optional(),
+      manage_tags:    z.boolean().optional(),
+      manage_columns: z.boolean().optional(),
+    }).parse(req.body)
+    const user = await prisma.user.update({
+      where: { id },
+      data: { permissions: JSON.stringify(perms) },
+      select: { id: true, permissions: true },
+    })
+    await writeAudit({ action: 'permissions_change', entity: 'user', entityId: id, actorId: req.user.id, meta: perms })
+    res.json({ ...user, permissions: parsePerms(user.permissions) })
   } catch (e) { next(e) }
 })
 

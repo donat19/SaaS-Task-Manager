@@ -15,3 +15,12 @@ export function requireAdmin(req, res, next) {
   if (req.user?.role !== 'admin') return res.status(403).json({ error: 'Forbidden' })
   next()
 }
+
+export function requirePerm(perm) {
+  return (req, res, next) => {
+    if (req.user?.role === 'admin') return next()
+    const perms = req.user?.permissions || {}
+    if (!perms[perm]) return res.status(403).json({ error: `Permission denied: ${perm}` })
+    next()
+  }
+}
