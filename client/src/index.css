@@ -94,9 +94,8 @@ html.dark .sb-mark::after { mix-blend-mode: screen; opacity: 0.85; }
 .sb-search-in .ic { width: 13px; height: 13px; }
 
 .sb-sect { padding: 14px 12px 4px; font-size: 10.5px; font-weight: 550; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-4); display: flex; justify-content: space-between; align-items: center; }
-.sb-sect button { all: unset; cursor: pointer; width: 16px; height: 16px; display: grid; place-items: center; color: var(--ink-3); border-radius: 4px; }
-.sb-sect button:hover { background: oklch(0 0 0 / 0.05); color: var(--ink); }
-html.dark .sb-sect button:hover { background: oklch(1 0 0 / 0.06); }
+.sb-sect button { all: unset; cursor: pointer; width: 18px; height: 18px; display: grid; place-items: center; color: var(--ink-2); border-radius: 5px; background: var(--line); transition: background 0.15s, color 0.15s; }
+.sb-sect button:hover { background: var(--accent); color: #fff; }
 
 .sb-list { display: flex; flex-direction: column; gap: 1px; padding: 0 8px; }
 .sb-item { display: flex; align-items: center; gap: 9px; padding: 6px 8px; border-radius: 7px; cursor: pointer; font-size: 13px; color: var(--ink-2); position: relative; user-select: none; }

@@ -47,15 +47,16 @@ function BarChart({ data, dark }) {
   const barW = chartW / data.length
   const barPad = barW * 0.18
 
-  const yTicks = [0, Math.round(maxVal / 2), maxVal]
+  const safeMax = maxVal || 1
+  const yTicks = [0, Math.round(safeMax / 2), safeMax]
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto', overflow: 'visible' }}>
       {/* Grid lines */}
-      {yTicks.map(t => {
-        const y = PAD.top + chartH - (t / maxVal) * chartH
+      {yTicks.map((t, ti) => {
+        const y = PAD.top + chartH - (t / safeMax) * chartH
         return (
-          <g key={t}>
+          <g key={`tick-${ti}`}>
             <line x1={PAD.left} x2={W - PAD.right} y1={y} y2={y}
               stroke="var(--line)" strokeWidth={1} strokeDasharray="4 3" />
             <text x={PAD.left - 6} y={y + 4} textAnchor="end" fontSize={10}
@@ -67,11 +68,11 @@ function BarChart({ data, dark }) {
       {/* Bars */}
       {data.map((d, i) => {
         const x = PAD.left + i * barW
-        const createdH = (d.created / maxVal) * chartH
-        const completedH = (d.completed / maxVal) * chartH
+        const createdH = (d.created / safeMax) * chartH
+        const completedH = (d.completed / safeMax) * chartH
 
         return (
-          <g key={i}>
+          <g key={`bar-${i}-${d.label}`}>
             {/* Created bar */}
             <rect
               x={x + barPad} y={PAD.top + chartH - createdH}

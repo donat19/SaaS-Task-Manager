@@ -6,6 +6,8 @@ import { useAuth } from '../context/AuthContext'
 export default function Sidebar({ view, setView, onShortcuts, onSearch }) {
   const { user, logout } = useAuth()
   const [profileOpen, setProfileOpen] = useState(false)
+  const [newBoardOpen, setNewBoardOpen] = useState(false)
+  const [newBoardName, setNewBoardName] = useState('')
   const footRef = useRef(null)
 
   useEffect(() => {
@@ -62,7 +64,9 @@ export default function Sidebar({ view, setView, onShortcuts, onSearch }) {
 
       <div className="sb-sect">
         <span>Boards</span>
-        <button title="New board"><Icon name="plus" size={12} /></button>
+        <button title="New board" onClick={() => { setNewBoardName(''); setNewBoardOpen(true) }}>
+          <Icon name="plus" size={12} />
+        </button>
       </div>
       <div className="sb-list">
         {boards.map(b => (
@@ -145,6 +149,46 @@ export default function Sidebar({ view, setView, onShortcuts, onSearch }) {
           />
         </div>
       </div>
+      {newBoardOpen && (
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'grid', placeItems: 'center', background: 'rgba(0,0,0,0.4)' }}
+          onClick={() => setNewBoardOpen(false)}
+        >
+          <div
+            style={{ background: 'var(--bg-elev)', borderRadius: 14, padding: '22px 24px', width: 360, boxShadow: '0 8px 32px #0004', display: 'flex', flexDirection: 'column', gap: 16 }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ fontSize: 15, fontWeight: 650, color: 'var(--ink)' }}>New board</div>
+            <input
+              autoFocus
+              placeholder="Board name…"
+              value={newBoardName}
+              onChange={e => setNewBoardName(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && newBoardName.trim()) {
+                  setNewBoardOpen(false)
+                }
+                if (e.key === 'Escape') setNewBoardOpen(false)
+              }}
+              style={{
+                all: 'unset', display: 'block', width: '100%', boxSizing: 'border-box',
+                padding: '8px 12px', fontSize: 14, color: 'var(--ink)',
+                background: 'var(--bg-soft)', border: '1px solid var(--line)', borderRadius: 9, fontFamily: 'inherit',
+              }}
+            />
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+              <button className="btn btn-ghost" onClick={() => setNewBoardOpen(false)}>Cancel</button>
+              <button
+                className="btn btn-primary"
+                disabled={!newBoardName.trim()}
+                onClick={() => setNewBoardOpen(false)}
+              >
+                Create board
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </aside>
   )
 }
