@@ -18,6 +18,7 @@ import Members from './components/Members'
 import Profile from './components/Profile'
 import Settings from './components/Settings'
 import Analytics from './components/Analytics'
+import BoardSettings from './components/BoardSettings'
 
 export default function App() {
   const { user } = useAuth()
@@ -31,6 +32,7 @@ export default function App() {
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [dark, setDark] = useState(() => localStorage.getItem('dark') === '1')
+  const [boardSettingsOpen, setBoardSettingsOpen] = useState(false)
   const [toast, setToast] = useState(null)
   const [filters, setFilters] = useState(() => {
     const p = new URLSearchParams(window.location.search)
@@ -146,7 +148,18 @@ export default function App() {
   const progress = filteredTasks.length ? Math.round((doneTasks / filteredTasks.length) * 100) : 0
   const activeFilterCount = Object.values(filters).filter(v => v?.length).length
 
-  const viewLabel = { board: 'Board', table: 'All tasks', audit: 'Audit log', members: 'Members', profile: 'Profile', settings: 'Settings', analytics: 'Analytics' }[view] || 'Board'
+  const STATIC_VIEWS = new Set(['table', 'audit', 'members', 'profile', 'settings', 'analytics'])
+  const isBoardView = !STATIC_VIEWS.has(view)
+  const isTableView = view === 'table'
+
+  const getBoardLabel = () => {
+    if (view === 'board') return 'Board'
+    try {
+      const extra = JSON.parse(localStorage.getItem('extraBoards') || '[]')
+      return extra.find(b => b.id === view)?.label || 'Board'
+    } catch { return 'Board' }
+  }
+  const viewLabel = { table: 'All tasks', audit: 'Audit log', members: 'Members', profile: 'Profile', settings: 'Settings', analytics: 'Analytics' }[view] || getBoardLabel()
 
   return (
     <div className="app">
@@ -168,12 +181,12 @@ export default function App() {
             <strong>{viewLabel}</strong>
           </div>
 
-          {view !== 'audit' && view !== 'members' && view !== 'profile' && view !== 'settings' && view !== 'analytics' && (
+          {(isBoardView || isTableView) && (
             <div className="seg">
-              <button className={view === 'board' ? 'on' : ''} onClick={() => setView('board')}>
+              <button className={isBoardView ? 'on' : ''} onClick={() => setView(isBoardView ? view : 'board')}>
                 <Icon name="grid" /> Board
               </button>
-              <button className={view === 'table' ? 'on' : ''} onClick={() => setView('table')}>
+              <button className={isTableView ? 'on' : ''} onClick={() => setView('table')}>
                 <Icon name="table" /> Table
               </button>
             </div>
@@ -206,11 +219,11 @@ export default function App() {
         </div>
 
         {/* Board header — only for board/table views */}
-        {view !== 'audit' && view !== 'members' && view !== 'profile' && view !== 'settings' && view !== 'analytics' && (
+        {(isBoardView || isTableView) && (
           <div className="board-head">
             <div className="board-title-wrap">
               <div className="board-title">
-                {user?.name?.split(' ')[0]}'s workspace <em>·</em> {tasks.length > 0 ? 'Active' : 'Empty'}
+                {viewLabel} <em>·</em> {tasks.length > 0 ? 'Active' : 'Empty'}
               </div>
               <div className="board-sub">
                 <span className="meta">
@@ -228,6 +241,9 @@ export default function App() {
             </div>
             <div className="board-tools" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
               <FilterBar filters={filters} onChange={setFilters} />
+              <button className="btn btn-ghost" onClick={() => setBoardSettingsOpen(true)} title="Board settings">
+                <Icon name="settings" /> Settings
+              </button>
               <button className="btn btn-ghost" onClick={() => setNewTaskOpen(true)}>
                 <Icon name="plus" /> New task
               </button>
@@ -235,8 +251,8 @@ export default function App() {
           </div>
         )}
 
-        {view === 'board' && <Board tasks={filteredTasks} setTasks={setTasks} onOpen={setOpenTaskId} dark={dark} onNewTask={(status) => { setNewTaskStatus(status); setNewTaskOpen(true) }} />}
-        {view === 'table' && <TableView tasks={filteredTasks} onOpen={setOpenTaskId} dark={dark} />}
+        {isBoardView && <Board tasks={filteredTasks} setTasks={setTasks} onOpen={setOpenTaskId} dark={dark} onNewTask={(status) => { setNewTaskStatus(status); setNewTaskOpen(true) }} />}
+        {isTableView && <TableView tasks={filteredTasks} onOpen={setOpenTaskId} dark={dark} />}
         {view === 'audit' && <AuditView />}
         {view === 'members' && <Members />}
         {view === 'profile' && <Profile />}
@@ -262,6 +278,13 @@ export default function App() {
       )}
       {newTaskOpen && (
         <NewTaskModal onClose={() => { setNewTaskOpen(false); setNewTaskStatus(null) }} onCreated={handleTaskCreated} dark={dark} initialStatus={newTaskStatus} />
+      )}
+      {boardSettingsOpen && (
+        <BoardSettings
+          boardId={view}
+          boardName={viewLabel}
+          onClose={() => setBoardSettingsOpen(false)}
+        />
       )}
       {shortcutsOpen && <Shortcuts onClose={() => setShortcutsOpen(false)} />}
       {searchOpen && (

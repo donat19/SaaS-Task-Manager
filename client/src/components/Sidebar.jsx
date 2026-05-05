@@ -92,7 +92,7 @@ export default function Sidebar({ view, setView, onShortcuts, onSearch }) {
       </div>
       <div className="sb-list">
         {boards.map(b => (
-          <div key={b.id} className={`sb-item ${b.active ? 'active' : ''}`} onClick={() => setView('board')}>
+          <div key={b.id} className={`sb-item ${b.active ? 'active' : ''}`} onClick={() => setView(b.id)}>
             <span className="sb-dot" style={{ background: b.color }} />
             <span>{b.label}</span>
           </div>
