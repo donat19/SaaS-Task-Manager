@@ -119,7 +119,7 @@ function DonutChart({ segments, size = 120 }) {
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
       <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--line)" strokeWidth={18} />
       {slices.map((s, i) => (
-        <circle key={i} cx={cx} cy={cy} r={r} fill="none"
+        <circle key={`donut-${s.label ?? i}`} cx={cx} cy={cy} r={r} fill="none"
           stroke={s.color} strokeWidth={18}
           strokeDasharray={`${s.dash} ${s.gap}`}
           strokeDashoffset={circumference / 4 - s.offset}

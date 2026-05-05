@@ -106,6 +106,6 @@ function highlight(text, query) {
   const re = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
   const parts = text.split(re)
   return parts.map((p, i) =>
-    re.test(p) ? <mark key={i} style={{ background: 'var(--accent-soft)', color: 'var(--accent-ink)', borderRadius: 2, padding: '0 1px' }}>{p}</mark> : p
+    re.test(p) ? <mark key={`hl-${i}-${p}`} style={{ background: 'var(--accent-soft)', color: 'var(--accent-ink)', borderRadius: 2, padding: '0 1px' }}>{p}</mark> : p
   )
 }

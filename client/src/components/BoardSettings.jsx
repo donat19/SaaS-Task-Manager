@@ -86,6 +86,11 @@ const OKLCH_TO_HEX = {
   'oklch(0.6 0.14 280)': '#7c3aed',
   'oklch(0.6 0.14 220)': '#2563eb',
   'oklch(0.6 0.13 150)': '#16a34a',
+  'oklch(0.6 0.16 150)': '#15803d',
+  'oklch(0.6 0.16 30)':  '#dc6a1a',
+  'oklch(0.6 0.16 200)': '#0284c7',
+  'oklch(0.6 0.16 340)': '#db2777',
+  'oklch(0.6 0.14 60)':  '#ca8a04',
 }
 
 function toHex(color) {

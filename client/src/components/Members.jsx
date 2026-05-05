@@ -55,7 +55,7 @@ export default function Members() {
   const [inviteOpen, setInviteOpen] = useState(false)
   const [inviteData, setInviteData] = useState({ name: '', email: '', password: '', role: 'user' })
   const [inviteError, setInviteError] = useState('')
-  const [inviting, setSaving] = useState(false)
+  const [inviting, setInviting] = useState(false)
   const [toast, setToast] = useState(null)
   const [inviteLink, setInviteLink] = useState(null)
   const [generatingLink, setGeneratingLink] = useState(false)
@@ -102,7 +102,7 @@ export default function Members() {
     if (!inviteData.name.trim() || !inviteData.email.trim() || !inviteData.password.trim()) {
       setInviteError('All fields are required'); return
     }
-    setSaving(true); setInviteError('')
+    setInviting(true); setInviteError('')
     try {
       const newUser = await api.post('/auth/register', inviteData)
       // register returns token, refetch users
@@ -114,7 +114,7 @@ export default function Members() {
     } catch (e) {
       setInviteError(e?.response?.data?.error || 'Failed to create account')
     }
-    setSaving(false)
+    setInviting(false)
   }
 
   const confirmUser = users.find(u => u.id === confirmId)

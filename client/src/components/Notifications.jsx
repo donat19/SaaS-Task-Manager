@@ -3,9 +3,9 @@ import { Avatar } from './Atoms'
 
 function renderText(text) {
   return text.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g).map((p, i) => {
-    if (p.startsWith('**') && p.endsWith('**')) return <b key={i}>{p.slice(2, -2)}</b>
-    if (p.startsWith('*') && p.endsWith('*')) return <em key={i} style={{ fontFamily: 'var(--serif)', color: 'var(--accent)', fontStyle: 'italic' }}>{p.slice(1, -1)}</em>
-    return <span key={i}>{p}</span>
+    if (p.startsWith('**') && p.endsWith('**')) return <b key={`n-${i}`}>{p.slice(2, -2)}</b>
+    if (p.startsWith('*') && p.endsWith('*')) return <em key={`n-${i}`} style={{ fontFamily: 'var(--serif)', color: 'var(--accent)', fontStyle: 'italic' }}>{p.slice(1, -1)}</em>
+    return <span key={`n-${i}`}>{p}</span>
   })
 }
 
