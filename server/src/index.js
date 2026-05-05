@@ -18,6 +18,7 @@ import tagRoutes from './routes/tags.js'
 import notificationRoutes from './routes/notifications.js'
 import searchRoutes from './routes/search.js'
 import auditRoutes from './routes/audit.js'
+import statsRoutes from './routes/stats.js'
 import { errorHandler } from './middleware/errorHandler.js'
 import { setupSocket } from './lib/socket.js'
 
@@ -49,6 +50,7 @@ app.use('/api/tags', tagRoutes)
 app.use('/api/notifications', notificationRoutes)
 app.use('/api/search', searchRoutes)
 app.use('/api/audit', auditRoutes)
+app.use('/api/stats', statsRoutes)
 
 app.use(errorHandler)
 

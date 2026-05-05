@@ -20,9 +20,12 @@ export default function Sidebar({ view, setView, onShortcuts, onSearch }) {
   ]
 
   const admin = user?.role === 'admin' ? [
-    { id: 'members', label: 'Members',   icon: 'user' },
-    { id: 'audit',   label: 'Audit log', icon: 'log' },
-  ] : []
+    { id: 'members',   label: 'Members',   icon: 'user' },
+    { id: 'analytics', label: 'Analytics', icon: 'activity' },
+    { id: 'audit',     label: 'Audit log', icon: 'log' },
+  ] : [
+    { id: 'analytics', label: 'Analytics', icon: 'activity' },
+  ]
 
   const menuItem = (icon, label, onClick, danger) => (
     <button
